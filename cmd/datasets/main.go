@@ -101,7 +101,7 @@ func runHTTP(ctx context.Context, c context.CancelFunc, grpcAddr string) {
 		log.Fatal().Err(err).Msg("cannot register rmux")
 	}
 
-	httpAddr := "localhost:" + osinit.MustLoadEnv("HTTP_PORT")
+	httpAddr := ":" + osinit.MustLoadEnv("HTTP_PORT")
 	l, err := net.Listen("tcp", httpAddr)
 	if err != nil {
 		log.Fatal().Err(err).Msg("cannot get http net.Listener")
@@ -146,7 +146,7 @@ func run(context.Context) {
 	}
 	service := initService(ctx, maker)
 
-	grpcAddr := "localhost:" + osinit.MustLoadEnv("GRPC_PORT")
+	grpcAddr := ":" + osinit.MustLoadEnv("GRPC_PORT")
 
 	ctx, c := context.WithCancel(ctx)
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt)
