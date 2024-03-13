@@ -10,7 +10,6 @@
       "name": "DatasetsService"
     }
   ],
-  "host": "tcarzverey.ru:8084",
   "schemes": [
     "http"
   ],
@@ -49,6 +48,11 @@
         ],
         "tags": [
           "DatasetsService"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
         ]
       },
       "post": {
@@ -79,6 +83,11 @@
         ],
         "tags": [
           "DatasetsService"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
         ]
       }
     },
@@ -124,6 +133,11 @@
         ],
         "tags": [
           "DatasetsService"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
         ]
       }
     },
@@ -157,6 +171,11 @@
         ],
         "tags": [
           "DatasetsService"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
         ]
       }
     },
@@ -201,6 +220,11 @@
         ],
         "tags": [
           "DatasetsService"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
         ]
       }
     }
@@ -412,7 +436,7 @@
     }
   },
   "securityDefinitions": {
-    "Bearer": {
+    "AccessToken": {
       "type": "apiKey",
       "description": "Enter the token with the `Bearer: ` prefix, e.g. \"Bearer abcde12345\"",
       "name": "Authorization",

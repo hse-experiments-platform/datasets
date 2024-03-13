@@ -22,8 +22,8 @@ github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1 h1:HcUWd006luQPljE73d5sk+
 github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1/go.mod h1:w9Y7gY31krpLmrVU5ZPG9H7l9fZuRu5/3R3S3FMtVQ4=
 github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.1 h1:/c3QmbOGMGTOumP2iT/rCwB7b0QDGLKzqOmktBjT+Is=
 github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.1/go.mod h1:5SN9VR2LTsRFsrEC6FHgRbTWrTHu6tqPeKxEQv15giM=
-github.com/hse-experiments-platform/library v0.0.0-20240312212415-a1b779989e0c h1:n7r6Nv0PDlVt8Fmdlgvh/UehL44sRrSQmAsnQsLik9g=
-github.com/hse-experiments-platform/library v0.0.0-20240312212415-a1b779989e0c/go.mod h1:ggjcUW0e2Qs9vqTCgkW0MI42WJWlBnhSAIlBLaAZMzQ=
+github.com/hse-experiments-platform/library v0.0.0-20240313213636-fb4bd971222e h1:kpYBhHiLsxLfwhx3RFfzMpKDzLiaj/MYLVfd9ryoAWU=
+github.com/hse-experiments-platform/library v0.0.0-20240313213636-fb4bd971222e/go.mod h1:ggjcUW0e2Qs9vqTCgkW0MI42WJWlBnhSAIlBLaAZMzQ=
 github.com/jackc/pgpassfile v1.0.0 h1:/6Hmqy13Ss2zCq62VdNG8tM1wchn8zjSGOBJ6icpsIM=
 github.com/jackc/pgpassfile v1.0.0/go.mod h1:CEx0iS5ambNFdcRtxPj5JhEz+xB6uRky5eyVu/W2HEg=
 github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a h1:bbPeKD0xmW/Y25WS6cokEszi5g+S0QxI/d45PkRi7Nk=
