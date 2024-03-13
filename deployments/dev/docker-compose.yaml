@@ -11,22 +11,25 @@ services:
       - db-migrator
     environment:
       - DOTENV_FILE=configs/dev/.env
-      - DB_CONNECT_STRING=postgresql://hseuser:P@ssw0rd@localhost:6432/hsedb
-      - DATASETS_DB_CONNECT_STRING=postgresql://hseuser:P@ssw0rd@localhost:6433/datasetsdb
+      - DB_CONNECT_STRING=postgresql://hseuser:P@ssw0rd@db:5432/hsedb
+      - DATASETS_DB_CONNECT_STRING=postgresql://hseuser:P@ssw0rd@datasetsdb:5432/datasetsdb
     ports:
       - "8083:8083"
       - "8084:8084"
-    network_mode: host
+    networks:
+      - auth_hse-net
 
   db-migrator:
     build:
       context: ../../
       dockerfile: build/migrate/Dockerfile
-    command: ["postgresql://hseuser:P@ssw0rd@db:5432/datasetsdb", "up"]
+    command: ["postgresql://hseuser:P@ssw0rd@datasetsdb:5432/datasetsdb", "up"]
     depends_on:
-      - db
+      - datasetsdb
+    networks:
+      - auth_hse-net
 
-  db:
+  datasetsdb:
    image: postgres:16
    restart: always
    environment:
@@ -44,7 +47,13 @@ services:
      timeout: 5s
      retries: 5
      start_period: 10s
+   networks:
+     - auth_hse-net
 
 volumes:
   db-data:
     driver: local
+
+networks:
+  auth_hse-net:
+    external: true
