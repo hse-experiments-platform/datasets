@@ -11,6 +11,7 @@ FROM alpine:latest
 WORKDIR /build
 
 COPY configs /build/configs
+COPY swagger /build/swagger
 COPY --from=builder /build/bin/datasets /build/bin/datasets
 
 CMD ["./bin/datasets"]
