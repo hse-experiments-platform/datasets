@@ -16,6 +16,18 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
     description: "Datasets service for mlops project.",
   };
 
+  security_definitions: {
+    security: {
+      key: "Bearer";
+      value: {
+        type: TYPE_API_KEY;
+        description: "Enter the token with the `Bearer: ` prefix, e.g. \"Bearer abcde12345\""
+        in: IN_HEADER;
+        name: "Authorization";
+      }
+    }
+  };
+
   host: "tcarzverey.ru:8084"
   schemes: HTTP;
   consumes: "application/json";
