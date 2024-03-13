@@ -1,0 +1,138 @@
+syntax = "proto3";
+
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+
+package github.hse_experiments_platform.datasets.api.datasets;
+
+option go_package="github.com/hse-experiments-platform/datasets;datasets";
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info: {
+    title: "HSE MLOps Datasets service";
+    version: "1.0";
+    description: "Datasets service for mlops project.",
+  };
+
+  host: "tcarzverey.ru:8084"
+  schemes: HTTP;
+  consumes: "application/json";
+  produces: "application/json";
+};
+
+service DatasetsService {
+  rpc CreateDataset (CreateDatasetRequest) returns (CreateDatasetResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/dataset"
+      body: "*"
+    };
+  };
+  rpc UploadDataset (stream UploadDatasetRequest) returns (UploadDatasetResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/dataset/upload"
+      body: "*"
+    };
+  };
+  rpc GetDatasets (GetDatasetsRequest) returns (GetDatasetsResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/datasets"
+    };
+  };
+  rpc GetDataset (GetDatasetRequest) returns (GetDatasetResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/dataset"
+    };
+  };
+  rpc GetDatasetRows (GetDatasetRowsRequest) returns (GetDatasetRowsResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/dataset/rows"
+    };
+  };
+}
+
+message CreateDatasetRequest {
+  string name = 1;
+  string link = 2;
+}
+
+message CreateDatasetResponse {
+  int64 datasetID = 1;
+}
+
+message UploadDatasetRequest {
+  string filename = 1;
+  bytes chunk = 2;
+}
+
+message UploadDatasetResponse {
+  string filename = 1;
+  uint32 size = 2;
+}
+
+message GetDatasetsRequest {
+  uint64 limit = 1;
+  uint64 offset = 2;
+  string query = 3;
+};
+
+enum DatasetStatus {
+  Unknown = 0;
+  Initializing = 1;
+  Loading = 2;
+  Ready = 3;
+  Error = 4;
+}
+
+message ShortDatasetInfo {
+  int64 id = 1;
+  string name = 2;
+  string version = 3;
+  DatasetStatus status = 4;
+}
+
+message PageInfo {
+  uint64 offset = 1;
+  uint64 limit = 2;
+  uint64 total = 3;
+}
+
+message GetDatasetsResponse {
+  repeated ShortDatasetInfo datasets = 1;
+  PageInfo pageInfo = 2;
+}
+
+message GetDatasetRequest {
+  int64 datasetID = 1;
+}
+
+message Dataset {
+  int64 id = 1;
+  string name = 2;
+  string version = 3;
+  DatasetStatus status = 4;
+  uint64 rowsCount = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp updated_at = 7;
+}
+
+message GetDatasetResponse {
+  Dataset dataset = 1;
+}
+
+message GetDatasetRowsRequest {
+  int64 datasetID = 1;
+  uint64 limit = 2;
+  uint64 offset = 3;
+}
+
+message DatasetRow {
+  uint64 rowNumber = 1;
+  repeated google.protobuf.Any columns = 2;
+}
+
+message GetDatasetRowsResponse {
+    repeated DatasetRow rows = 1;
+    PageInfo pageInfo = 2;
+}

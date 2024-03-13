@@ -1,0 +1,50 @@
+version: "3.8"
+
+name: datasets
+
+services:
+  datasets:
+    build:
+      context: ../../
+      dockerfile: build/Dockerfile
+    depends_on:
+      - db-migrator
+    environment:
+      - DOTENV_FILE=configs/dev/.env
+      - DB_CONNECT_STRING=postgresql://hseuser:P@ssw0rd@localhost:6432/hsedb
+      - DATASETS_DB_CONNECT_STRING=postgresql://hseuser:P@ssw0rd@localhost:6433/datasetsdb
+    ports:
+      - "8083:8083"
+      - "8084:8084"
+    network_mode: host
+
+  db-migrator:
+    build:
+      context: ../../
+      dockerfile: build/migrate/Dockerfile
+    command: ["postgresql://hseuser:P@ssw0rd@db:5432/datasetsdb", "up"]
+    depends_on:
+      - db
+
+  db:
+   image: postgres:16
+   restart: always
+   environment:
+     - POSTGRES_DB=datasetsdb
+     - POSTGRES_USER=hseuser
+     - POSTGRES_PASSWORD=P@ssw0rd
+     - PGDATA=/var/lib/postgresql/data/pgdata
+   ports:
+     - '6433:5432'
+   volumes:
+     - db-data:/var/lib/postgresql/data
+   healthcheck:
+     test: [ "CMD-SHELL", "pg_isready -U hseuser -d datasetsdb" ]
+     interval: 10s
+     timeout: 5s
+     retries: 5
+     start_period: 10s
+
+volumes:
+  db-data:
+    driver: local
