@@ -107,14 +107,14 @@ func runHTTP(ctx context.Context, c context.CancelFunc, grpcAddr string) {
 		log.Fatal().Err(err).Msg("cannot get http net.Listener")
 	}
 
-	// creating swagger
-	//mux := http.NewServeMux()
-	//// mount the gRPC HTTP gateway to the root
-	//mux.Handle("/", rmux)
-	//fs := http.FileServer(http.Dir("./swagger"))
-	//mux.Handle("/swagger/", http.StripPrefix("/swagger/", fs))
+	//creating swagger
+	mux := http.NewServeMux()
+	// mount the gRPC HTTP gateway to the root
+	mux.Handle("/", rmux)
+	fs := http.FileServer(http.Dir("./swagger"))
+	mux.Handle("/swagger/", http.StripPrefix("/swagger/", fs))
 
-	s := http.Server{Handler: rmux}
+	s := http.Server{Handler: mux}
 
 	go func() {
 		<-ctx.Done()
