@@ -17,6 +17,7 @@ import (
 	"github.com/hse-experiments-platform/library/pkg/utils/token"
 	"github.com/jackc/pgx/v5"
 	"github.com/joho/godotenv"
+	"github.com/rs/cors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
@@ -111,13 +112,14 @@ func runHTTP(ctx context.Context, c context.CancelFunc, grpcAddr string) {
 	}
 
 	//creating swagger
+
 	mux := http.NewServeMux()
 	// mount the gRPC HTTP gateway to the root
 	mux.Handle("/", rmux)
 	fs := http.FileServer(http.Dir("./swagger"))
 	mux.Handle("/swagger/", http.StripPrefix("/swagger/", fs))
 
-	s := http.Server{Handler: mux}
+	s := http.Server{Handler: cors.AllowAll().Handler(mux)}
 
 	go func() {
 		<-ctx.Done()

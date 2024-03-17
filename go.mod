@@ -10,6 +10,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/opensaucerer/grab/v3 v3.0.1
 	github.com/planetscale/vtprotobuf v0.6.0
+	github.com/rs/cors v1.10.1
 	github.com/rs/zerolog v1.32.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240125205218-1f4bbc51befe
 	google.golang.org/grpc v1.62.1
