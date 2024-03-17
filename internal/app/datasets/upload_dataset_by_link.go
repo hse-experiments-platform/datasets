@@ -11,15 +11,21 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+var availableStatuses = map[db.DatasetStatus]bool{
+	db.DatasetStatusInitializing: true,
+	db.DatasetStatusError:        true,
+}
+
 func (d *datasetsService) prepareForUploadFunc(ctx context.Context, datasetID int64) func(tx pgx.Tx) error {
 	return func(tx pgx.Tx) error {
+
 		txDB := d.commonDB.WithTx(tx)
 
 		st, err := txDB.GetDatasetStatus(ctx, datasetID)
 		if err != nil {
 			return fmt.Errorf("txDB.GetDatasetStatus: %w", err)
-		} else if st != db.DatasetStatusInitializing {
-			return status.Errorf(codes.InvalidArgument, "invalid dataset status to upload: expected initializing, got: %v", st)
+		} else if !availableStatuses[st] {
+			return status.Errorf(codes.InvalidArgument, "invalid dataset status to upload: expected initializing/error, got: %v", st)
 		}
 
 		if err := txDB.SetStatus(ctx, db.SetStatusParams{
