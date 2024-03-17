@@ -60,7 +60,7 @@ func (b *Builder) ProcessChunk(data []byte) error {
 			break
 		} else if err != nil && r.InputOffset() == int64(len(parsingData)) ||
 			(err == nil && r.InputOffset() > 0 && parsingData[r.InputOffset()-1] != '\n') {
-			log.Info().Msg("got non full row in the end of the chunk")
+			//log.Info().Msg("got non full row in the end of the chunk")
 			if prefixLen == -1 {
 				prefixLen = len(data)
 			}
@@ -89,7 +89,7 @@ func (b *Builder) ProcessChunk(data []byte) error {
 		lastChunkRow--
 	}
 
-	log.Debug().Msg("got chunk to write in db")
+	//log.Debug().Msg("got chunk to write in db")
 	if err := b.DatasetsDB.UploadDatasetChunk(b.Ctx, datasetsdb.UploadDatasetChunkParams{
 		DatasetID:    b.DatasetID,
 		ChunkNumber:  b.chunkNumber,

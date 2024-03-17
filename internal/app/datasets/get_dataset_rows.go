@@ -62,6 +62,7 @@ func (d *datasetsService) getChunks(ctx context.Context, offset, limit int64, da
 	buff.Write(data)
 	var result [][]string
 	for i := chunks[0].MinRowNumber; i < offset+limit; i++ {
+		log.Debug().Any("aval", buff.Available()).Any("len", buff.Len()).Msg("debug")
 		cols, err := reader.Read()
 		if err != nil {
 			log.Error().Err(err).Int64("index", i).Int64("offset", offset).Int64("index", limit).Msg("cannot read row")
@@ -73,6 +74,7 @@ func (d *datasetsService) getChunks(ctx context.Context, offset, limit int64, da
 		result = append(result, cols)
 	}
 
+	_, _ = reader.ReadAll()
 	buff.Reset()
 
 	return result, nil
@@ -182,3 +184,5 @@ func (d *datasetsService) GetDatasetRows(ctx context.Context, request *pb.GetDat
 
 	return resp, nil
 }
+
+// "6","Judgment Night","6.527","316","Released","1993-10-15","12136938.0","109","21000000.0","tt0107286","en","Judgment Night","Four young friends, while taking a shortcut en route to a local boxing match, witness a brutal murder which leaves them running for their lives.","11.92","Don't move. Don't whisper. Don't even breathe.","Action, Crime, Thriller","Largo Entertainment, JVC, Universal Pictures","United States of America","English","Everlast, Peter Greene, Michael DeLorenzo, Denis Leary, Stephen Dorff, Galyn Görg, Eugene Williams, Will Zahrn, Emilio Estevez, Cuba Gooding Jr., Michael Wiseman, Jeremy Piven, Relioues Webb, Angela Alvarado, Christine Harnos","Stephen Hopkins","Peter Levy","Jere Cunningham, Lewis Colick","Marilyn Vance, Gene Levy, Lloyd Segan","Alan Silvestri"

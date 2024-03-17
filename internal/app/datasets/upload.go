@@ -15,8 +15,8 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// const bufferSize = 10 * 1024 * 1024 // 10mb
-const bufferSize = 12 // 10mb
+const bufferSize = 10 * 1024 * 1024 // 10mb
+//const bufferSize = 12 // 10mb
 
 func (d *datasetsService) uploadFromURL(ctx context.Context, addr string, datasetID int64) error {
 	client := grab.NewClient()
@@ -38,7 +38,7 @@ func (d *datasetsService) uploadFromURL(ctx context.Context, addr string, datase
 	resp := client.Do(req)
 
 	// start progress ticker
-	t := time.NewTicker(time.Millisecond * 1000)
+	t := time.NewTicker(time.Second * 5)
 
 	// print progress
 	go func(r *grab.Response) {
