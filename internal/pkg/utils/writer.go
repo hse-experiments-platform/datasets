@@ -50,10 +50,13 @@ func (m *chunkedFunctionCaller) Write(data []byte) (int, error) {
 
 func (m *chunkedFunctionCaller) Flush() error {
 	if len(m.chunk) > 0 {
+		m.chunk = append(m.chunk, '\n')
 		if err := m.f(m.chunk); err != nil {
 			return fmt.Errorf("error in function: %w", err)
 		}
 	}
+
+	m.chunk = nil
 
 	return nil
 }
