@@ -6,12 +6,11 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/hse-experiments-platform/datasets/internal/app/datasets"
-	"github.com/hse-experiments-platform/datasets/internal/pkg/storage/datasetsdb"
-	"github.com/hse-experiments-platform/datasets/internal/pkg/storage/db"
 	pb "github.com/hse-experiments-platform/datasets/pkg/datasets"
 	osinit "github.com/hse-experiments-platform/library/pkg/utils/init"
 	"github.com/hse-experiments-platform/library/pkg/utils/loggers"
@@ -47,10 +46,11 @@ func initDB(ctx context.Context, dsnOSKey string) *pgx.Conn {
 }
 
 func initService(ctx context.Context, maker token.Maker) pb.DatasetsServiceServer {
-	commonDB := db.New(initDB(ctx, "DB_CONNECT_STRING"))
-	datasetsDataDB := datasetsdb.New(initDB(ctx, "DATASETS_DB_CONNECT_STRING"))
-
-	service := datasets.NewService(commonDB, datasetsDataDB, maker)
+	service := datasets.NewService(
+		initDB(ctx, "DB_CONNECT_STRING"),
+		initDB(ctx, "DATASETS_DB_CONNECT_STRING"),
+		maker,
+	)
 
 	return service
 }
@@ -67,6 +67,9 @@ func runGRPC(ctx context.Context, c context.CancelFunc, server pb.DatasetsServic
 		grpc.ChainUnaryInterceptor(
 			maker.TokenExtractorUnaryInterceptor(),
 			logging.UnaryServerInterceptor(loggers.ZerologInterceptorLogger(log.Logger), opts...),
+		),
+		grpc.ChainStreamInterceptor(
+			logging.StreamServerInterceptor(loggers.ZerologInterceptorLogger(log.Logger), opts...),
 		),
 	)
 	pb.RegisterDatasetsServiceServer(s, server)
@@ -164,7 +167,7 @@ func run(context.Context) {
 func main() {
 	ctx := context.Background()
 
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.DateTime})
 
 	loadEnv()
 

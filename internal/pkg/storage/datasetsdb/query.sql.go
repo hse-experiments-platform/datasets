@@ -9,20 +9,22 @@ import (
 	"context"
 )
 
-const createEmptyDatasetData = `-- name: CreateEmptyDatasetData :exec
-INSERT INTO datasets_data (dataset_id, raw_data_chunks, min_row_number, max_row_number)
-VALUES ($1, array []::bytea[], array []::bigint[], array []::bigint[])
+const deleteDatasetData = `-- name: DeleteDatasetData :exec
+DELETE
+from datasets_data
+where dataset_id = $1
 `
 
-func (q *Queries) CreateEmptyDatasetData(ctx context.Context, datasetID int64) error {
-	_, err := q.db.Exec(ctx, createEmptyDatasetData, datasetID)
+func (q *Queries) DeleteDatasetData(ctx context.Context, datasetID int64) error {
+	_, err := q.db.Exec(ctx, deleteDatasetData, datasetID)
 	return err
 }
 
 const getDatasetChunkBorders = `-- name: GetDatasetChunkBorders :one
-SELECT min_row_number, max_row_number
+SELECT array_agg(min_row_number) as min_row_number, array_agg(max_row_number) as max_row_number
 from datasets_data
 WHERE dataset_id = $1
+GROUP BY dataset_id
 `
 
 type GetDatasetChunkBordersRow struct {
@@ -38,30 +40,44 @@ func (q *Queries) GetDatasetChunkBorders(ctx context.Context, datasetID int64) (
 }
 
 const getDatasetChunks = `-- name: GetDatasetChunks :many
-select UNNEST(raw_data_chunks[indexes.l : indexes.r]) as chunks
-from (select $2::int as l, $3::int as r) as indexes
-         join datasets_data d on d.dataset_id = $1
+select raw_data_chunk,min_row_number,max_row_number, prefix_len
+from datasets_data
+where dataset_id = $1
+  and $2 <= chunk_number
+  and chunk_number < $3
 `
 
 type GetDatasetChunksParams struct {
 	DatasetID int64
-	Column2   int32 // TODO: rename
-	Column3   int32
+	L         int64
+	R         int64
 }
 
-func (q *Queries) GetDatasetChunks(ctx context.Context, arg GetDatasetChunksParams) ([][]byte, error) {
-	rows, err := q.db.Query(ctx, getDatasetChunks, arg.DatasetID, arg.Column2, arg.Column3)
+type GetDatasetChunksRow struct {
+	RawDataChunk []byte
+	MinRowNumber int64
+	MaxRowNumber int64
+	PrefixLen    int32
+}
+
+func (q *Queries) GetDatasetChunks(ctx context.Context, arg GetDatasetChunksParams) ([]GetDatasetChunksRow, error) {
+	rows, err := q.db.Query(ctx, getDatasetChunks, arg.DatasetID, arg.L, arg.R)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items [][]byte
+	var items []GetDatasetChunksRow
 	for rows.Next() {
-		var chunks []byte
-		if err := rows.Scan(&chunks); err != nil {
+		var i GetDatasetChunksRow
+		if err := rows.Scan(
+			&i.RawDataChunk,
+			&i.MinRowNumber,
+			&i.MaxRowNumber,
+			&i.PrefixLen,
+		); err != nil {
 			return nil, err
 		}
-		items = append(items, chunks)
+		items = append(items, i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -69,27 +85,28 @@ func (q *Queries) GetDatasetChunks(ctx context.Context, arg GetDatasetChunksPara
 	return items, nil
 }
 
-const uploadDatasetChunks = `-- name: UploadDatasetChunks :exec
-UPDATE datasets_data
-set raw_data_chunks = raw_data_chunks || $2::bytea[],
-    min_row_number = min_row_number || $3::bigint[],
-    max_row_number = max_row_number || $4::bigint[]
-where dataset_id = $1
+const uploadDatasetChunk = `-- name: UploadDatasetChunk :exec
+INSERT into datasets_data (dataset_id, raw_data_chunk, min_row_number, max_row_number, chunk_number, prefix_len)
+VALUES ($1, $2, $3, $4, $5, $6)
 `
 
-type UploadDatasetChunksParams struct {
-	DatasetID int64
-	Column2   [][]byte
-	Column3   []int64
-	Column4   []int64
+type UploadDatasetChunkParams struct {
+	DatasetID    int64
+	RawDataChunk []byte
+	MinRowNumber int64
+	MaxRowNumber int64
+	ChunkNumber  int64
+	PrefixLen    int32
 }
 
-func (q *Queries) UploadDatasetChunks(ctx context.Context, arg UploadDatasetChunksParams) error {
-	_, err := q.db.Exec(ctx, uploadDatasetChunks,
+func (q *Queries) UploadDatasetChunk(ctx context.Context, arg UploadDatasetChunkParams) error {
+	_, err := q.db.Exec(ctx, uploadDatasetChunk,
 		arg.DatasetID,
-		arg.Column2,
-		arg.Column3,
-		arg.Column4,
+		arg.RawDataChunk,
+		arg.MinRowNumber,
+		arg.MaxRowNumber,
+		arg.ChunkNumber,
+		arg.PrefixLen,
 	)
 	return err
 }

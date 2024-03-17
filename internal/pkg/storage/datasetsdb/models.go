@@ -7,8 +7,10 @@ package datasetsdb
 import ()
 
 type DatasetsDatum struct {
-	DatasetID     int64
-	RawDataChunks [][]byte
-	MinRowNumber  []int64
-	MaxRowNumber  []int64
+	ChunkNumber  int64
+	DatasetID    int64
+	RawDataChunk []byte
+	MinRowNumber int64
+	MaxRowNumber int64
+	PrefixLen    int32
 }

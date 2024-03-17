@@ -18,6 +18,12 @@ set version    = $2,
     updated_at = now()
 where id = $1;
 
+-- name: SetStatus :exec
+update datasets
+set status    = $2,
+    updated_at = now()
+where id = $1;
+
 -- name: GetUserDatasets :many
 select id,
        name,
@@ -43,6 +49,11 @@ where id = $1;
 
 -- name: GetDatasetCreator :one
 select creator_id
+from datasets
+where id = $1;
+
+-- name: GetDatasetStatus :one
+select status
 from datasets
 where id = $1;
 

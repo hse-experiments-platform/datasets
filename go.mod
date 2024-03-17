@@ -8,6 +8,7 @@ require (
 	github.com/hse-experiments-platform/library v0.0.0-20240313213636-fb4bd971222e
 	github.com/jackc/pgx/v5 v5.5.5
 	github.com/joho/godotenv v1.5.1
+	github.com/opensaucerer/grab/v3 v3.0.1
 	github.com/planetscale/vtprotobuf v0.6.0
 	github.com/rs/zerolog v1.32.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240125205218-1f4bbc51befe

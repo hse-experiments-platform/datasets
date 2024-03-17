@@ -19,11 +19,11 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	DatasetsService_CreateDataset_FullMethodName  = "/github.hse_experiments_platform.datasets.api.datasets.DatasetsService/CreateDataset"
-	DatasetsService_UploadDataset_FullMethodName  = "/github.hse_experiments_platform.datasets.api.datasets.DatasetsService/UploadDataset"
-	DatasetsService_GetDatasets_FullMethodName    = "/github.hse_experiments_platform.datasets.api.datasets.DatasetsService/GetDatasets"
-	DatasetsService_GetDataset_FullMethodName     = "/github.hse_experiments_platform.datasets.api.datasets.DatasetsService/GetDataset"
-	DatasetsService_GetDatasetRows_FullMethodName = "/github.hse_experiments_platform.datasets.api.datasets.DatasetsService/GetDatasetRows"
+	DatasetsService_CreateDataset_FullMethodName       = "/github.hse_experiments_platform.datasets.api.datasets.DatasetsService/CreateDataset"
+	DatasetsService_UploadDatasetByLink_FullMethodName = "/github.hse_experiments_platform.datasets.api.datasets.DatasetsService/UploadDatasetByLink"
+	DatasetsService_GetDatasets_FullMethodName         = "/github.hse_experiments_platform.datasets.api.datasets.DatasetsService/GetDatasets"
+	DatasetsService_GetDataset_FullMethodName          = "/github.hse_experiments_platform.datasets.api.datasets.DatasetsService/GetDataset"
+	DatasetsService_GetDatasetRows_FullMethodName      = "/github.hse_experiments_platform.datasets.api.datasets.DatasetsService/GetDatasetRows"
 )
 
 // DatasetsServiceClient is the client API for DatasetsService service.
@@ -31,7 +31,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type DatasetsServiceClient interface {
 	CreateDataset(ctx context.Context, in *CreateDatasetRequest, opts ...grpc.CallOption) (*CreateDatasetResponse, error)
-	UploadDataset(ctx context.Context, opts ...grpc.CallOption) (DatasetsService_UploadDatasetClient, error)
+	UploadDatasetByLink(ctx context.Context, in *UploadDatasetByLinkRequest, opts ...grpc.CallOption) (*UploadDatasetByLinkResponse, error)
 	GetDatasets(ctx context.Context, in *GetDatasetsRequest, opts ...grpc.CallOption) (*GetDatasetsResponse, error)
 	GetDataset(ctx context.Context, in *GetDatasetRequest, opts ...grpc.CallOption) (*GetDatasetResponse, error)
 	GetDatasetRows(ctx context.Context, in *GetDatasetRowsRequest, opts ...grpc.CallOption) (*GetDatasetRowsResponse, error)
@@ -54,38 +54,13 @@ func (c *datasetsServiceClient) CreateDataset(ctx context.Context, in *CreateDat
 	return out, nil
 }
 
-func (c *datasetsServiceClient) UploadDataset(ctx context.Context, opts ...grpc.CallOption) (DatasetsService_UploadDatasetClient, error) {
-	stream, err := c.cc.NewStream(ctx, &DatasetsService_ServiceDesc.Streams[0], DatasetsService_UploadDataset_FullMethodName, opts...)
+func (c *datasetsServiceClient) UploadDatasetByLink(ctx context.Context, in *UploadDatasetByLinkRequest, opts ...grpc.CallOption) (*UploadDatasetByLinkResponse, error) {
+	out := new(UploadDatasetByLinkResponse)
+	err := c.cc.Invoke(ctx, DatasetsService_UploadDatasetByLink_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &datasetsServiceUploadDatasetClient{stream}
-	return x, nil
-}
-
-type DatasetsService_UploadDatasetClient interface {
-	Send(*UploadDatasetRequest) error
-	CloseAndRecv() (*UploadDatasetResponse, error)
-	grpc.ClientStream
-}
-
-type datasetsServiceUploadDatasetClient struct {
-	grpc.ClientStream
-}
-
-func (x *datasetsServiceUploadDatasetClient) Send(m *UploadDatasetRequest) error {
-	return x.ClientStream.SendMsg(m)
-}
-
-func (x *datasetsServiceUploadDatasetClient) CloseAndRecv() (*UploadDatasetResponse, error) {
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	m := new(UploadDatasetResponse)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
+	return out, nil
 }
 
 func (c *datasetsServiceClient) GetDatasets(ctx context.Context, in *GetDatasetsRequest, opts ...grpc.CallOption) (*GetDatasetsResponse, error) {
@@ -120,7 +95,7 @@ func (c *datasetsServiceClient) GetDatasetRows(ctx context.Context, in *GetDatas
 // for forward compatibility
 type DatasetsServiceServer interface {
 	CreateDataset(context.Context, *CreateDatasetRequest) (*CreateDatasetResponse, error)
-	UploadDataset(DatasetsService_UploadDatasetServer) error
+	UploadDatasetByLink(context.Context, *UploadDatasetByLinkRequest) (*UploadDatasetByLinkResponse, error)
 	GetDatasets(context.Context, *GetDatasetsRequest) (*GetDatasetsResponse, error)
 	GetDataset(context.Context, *GetDatasetRequest) (*GetDatasetResponse, error)
 	GetDatasetRows(context.Context, *GetDatasetRowsRequest) (*GetDatasetRowsResponse, error)
@@ -133,8 +108,8 @@ type UnimplementedDatasetsServiceServer struct {
 func (UnimplementedDatasetsServiceServer) CreateDataset(context.Context, *CreateDatasetRequest) (*CreateDatasetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateDataset not implemented")
 }
-func (UnimplementedDatasetsServiceServer) UploadDataset(DatasetsService_UploadDatasetServer) error {
-	return status.Errorf(codes.Unimplemented, "method UploadDataset not implemented")
+func (UnimplementedDatasetsServiceServer) UploadDatasetByLink(context.Context, *UploadDatasetByLinkRequest) (*UploadDatasetByLinkResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UploadDatasetByLink not implemented")
 }
 func (UnimplementedDatasetsServiceServer) GetDatasets(context.Context, *GetDatasetsRequest) (*GetDatasetsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDatasets not implemented")
@@ -175,30 +150,22 @@ func _DatasetsService_CreateDataset_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DatasetsService_UploadDataset_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(DatasetsServiceServer).UploadDataset(&datasetsServiceUploadDatasetServer{stream})
-}
-
-type DatasetsService_UploadDatasetServer interface {
-	SendAndClose(*UploadDatasetResponse) error
-	Recv() (*UploadDatasetRequest, error)
-	grpc.ServerStream
-}
-
-type datasetsServiceUploadDatasetServer struct {
-	grpc.ServerStream
-}
-
-func (x *datasetsServiceUploadDatasetServer) SendAndClose(m *UploadDatasetResponse) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func (x *datasetsServiceUploadDatasetServer) Recv() (*UploadDatasetRequest, error) {
-	m := new(UploadDatasetRequest)
-	if err := x.ServerStream.RecvMsg(m); err != nil {
+func _DatasetsService_UploadDatasetByLink_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UploadDatasetByLinkRequest)
+	if err := dec(in); err != nil {
 		return nil, err
 	}
-	return m, nil
+	if interceptor == nil {
+		return srv.(DatasetsServiceServer).UploadDatasetByLink(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DatasetsService_UploadDatasetByLink_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DatasetsServiceServer).UploadDatasetByLink(ctx, req.(*UploadDatasetByLinkRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _DatasetsService_GetDatasets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -267,6 +234,10 @@ var DatasetsService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _DatasetsService_CreateDataset_Handler,
 		},
 		{
+			MethodName: "UploadDatasetByLink",
+			Handler:    _DatasetsService_UploadDatasetByLink_Handler,
+		},
+		{
 			MethodName: "GetDatasets",
 			Handler:    _DatasetsService_GetDatasets_Handler,
 		},
@@ -279,12 +250,6 @@ var DatasetsService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _DatasetsService_GetDatasetRows_Handler,
 		},
 	},
-	Streams: []grpc.StreamDesc{
-		{
-			StreamName:    "UploadDataset",
-			Handler:       _DatasetsService_UploadDataset_Handler,
-			ClientStreams: true,
-		},
-	},
+	Streams:  []grpc.StreamDesc{},
 	Metadata: "datasets/datasets.proto",
 }

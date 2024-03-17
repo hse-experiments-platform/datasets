@@ -9,10 +9,10 @@ import (
 )
 
 type Querier interface {
-	CreateEmptyDatasetData(ctx context.Context, datasetID int64) error
+	DeleteDatasetData(ctx context.Context, datasetID int64) error
 	GetDatasetChunkBorders(ctx context.Context, datasetID int64) (GetDatasetChunkBordersRow, error)
-	GetDatasetChunks(ctx context.Context, arg GetDatasetChunksParams) ([][]byte, error)
-	UploadDatasetChunks(ctx context.Context, arg UploadDatasetChunksParams) error
+	GetDatasetChunks(ctx context.Context, arg GetDatasetChunksParams) ([]GetDatasetChunksRow, error)
+	UploadDatasetChunk(ctx context.Context, arg UploadDatasetChunkParams) error
 }
 
 var _ Querier = (*Queries)(nil)

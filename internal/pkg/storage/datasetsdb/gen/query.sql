@@ -1,20 +1,21 @@
 -- name: GetDatasetChunkBorders :one
-SELECT min_row_number, max_row_number
+SELECT array_agg(min_row_number) as min_row_number, array_agg(max_row_number) as max_row_number
 from datasets_data
-WHERE dataset_id = $1;
+WHERE dataset_id = $1
+GROUP BY dataset_id;
 
 -- name: GetDatasetChunks :many
-select UNNEST(raw_data_chunks[indexes.l : indexes.r]) as chunks
-from (select $2::int as l, $3::int as r) as indexes
-         join datasets_data d on d.dataset_id = $1;
+select raw_data_chunk,min_row_number,max_row_number, prefix_len
+from datasets_data
+where dataset_id = $1
+  and @l <= chunk_number
+  and chunk_number < @r;
 
--- name: CreateEmptyDatasetData :exec
-INSERT INTO datasets_data (dataset_id, raw_data_chunks, min_row_number, max_row_number)
-VALUES ($1, array []::bytea[], array []::bigint[], array []::bigint[]);
+-- name: UploadDatasetChunk :exec
+INSERT into datasets_data (dataset_id, raw_data_chunk, min_row_number, max_row_number, chunk_number, prefix_len)
+VALUES ($1, $2, $3, $4, $5, $6);
 
--- name: UploadDatasetChunks :exec
-UPDATE datasets_data
-set raw_data_chunks = raw_data_chunks || $2::bytea[],
-    min_row_number = min_row_number || $3::bigint[],
-    max_row_number = max_row_number || $4::bigint[]
+-- name: DeleteDatasetData :exec
+DELETE
+from datasets_data
 where dataset_id = $1;

@@ -82,6 +82,19 @@ func (q *Queries) GetDatasetCreator(ctx context.Context, id int64) (int64, error
 	return creator_id, err
 }
 
+const getDatasetStatus = `-- name: GetDatasetStatus :one
+select status
+from datasets
+where id = $1
+`
+
+func (q *Queries) GetDatasetStatus(ctx context.Context, id int64) (DatasetStatus, error) {
+	row := q.db.QueryRow(ctx, getDatasetStatus, id)
+	var status DatasetStatus
+	err := row.Scan(&status)
+	return status, err
+}
+
 const getUserDatasets = `-- name: GetUserDatasets :many
 select id,
        name,
@@ -138,6 +151,23 @@ func (q *Queries) GetUserDatasets(ctx context.Context, arg GetUserDatasetsParams
 		return nil, err
 	}
 	return items, nil
+}
+
+const setStatus = `-- name: SetStatus :exec
+update datasets
+set status    = $2,
+    updated_at = now()
+where id = $1
+`
+
+type SetStatusParams struct {
+	ID     int64
+	Status DatasetStatus
+}
+
+func (q *Queries) SetStatus(ctx context.Context, arg SetStatusParams) error {
+	_, err := q.db.Exec(ctx, setStatus, arg.ID, arg.Status)
+	return err
 }
 
 const updateAfterUpload = `-- name: UpdateAfterUpload :exec
