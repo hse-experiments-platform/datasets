@@ -55,15 +55,114 @@ func (ns NullDatasetStatus) Value() (driver.Value, error) {
 	return string(ns.DatasetStatus), nil
 }
 
+type ModelTrainingStatus string
+
+const (
+	ModelTrainingStatusNotStarted ModelTrainingStatus = "not_started"
+	ModelTrainingStatusInProgress ModelTrainingStatus = "in_progress"
+	ModelTrainingStatusError      ModelTrainingStatus = "error"
+	ModelTrainingStatusDone       ModelTrainingStatus = "done"
+)
+
+func (e *ModelTrainingStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = ModelTrainingStatus(s)
+	case string:
+		*e = ModelTrainingStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for ModelTrainingStatus: %T", src)
+	}
+	return nil
+}
+
+type NullModelTrainingStatus struct {
+	ModelTrainingStatus ModelTrainingStatus
+	Valid               bool // Valid is true if ModelTrainingStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullModelTrainingStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.ModelTrainingStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.ModelTrainingStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullModelTrainingStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.ModelTrainingStatus), nil
+}
+
 type Dataset struct {
-	ID        int64
-	Name      string
-	Version   string
-	Status    DatasetStatus
-	RowsCount int64
-	CreatorID int64
-	CreatedAt pgtype.Timestamptz
-	UpdatedAt pgtype.Timestamptz
+	ID          int64
+	Name        string
+	Version     string
+	Status      DatasetStatus
+	RowsCount   int64
+	CreatorID   int64
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
+	UploadError pgtype.Text
+}
+
+type Hyperparameter struct {
+	ID           int64
+	Name         string
+	Description  string
+	Type         string
+	DefaultValue []byte
+	ModelID      pgtype.Int8
+	CreatedAt    pgtype.Timestamptz
+	UpdatedAt    pgtype.Timestamptz
+}
+
+type Metric struct {
+	ID          int64
+	Name        string
+	Description string
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
+}
+
+type Model struct {
+	ID          int64
+	Name        string
+	Description string
+	ProblemID   int64
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
+}
+
+type Problem struct {
+	ID          int64
+	Name        string
+	Description string
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
+}
+
+type ProblemMetric struct {
+	ProblemID int64
+	MetricID  int64
+}
+
+type TrainedModel struct {
+	ID                  int64
+	Name                string
+	Description         string
+	ModelID             pgtype.Int8
+	ModelTrainingStatus ModelTrainingStatus
+	TrainingDatasetID   pgtype.Int8
+	TargetColumn        string
+	TrainError          pgtype.Text
+	CreatedAt           pgtype.Timestamptz
+	UpdatedAt           pgtype.Timestamptz
 }
 
 type User struct {

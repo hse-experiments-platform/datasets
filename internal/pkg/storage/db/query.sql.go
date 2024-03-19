@@ -37,20 +37,22 @@ select id,
        creator_id,
        created_at,
        updated_at,
-       rows_count
+       rows_count,
+       upload_error
 from datasets
 where id = $1
 `
 
 type GetDatasetRow struct {
-	ID        int64
-	Name      string
-	Version   string
-	Status    DatasetStatus
-	CreatorID int64
-	CreatedAt pgtype.Timestamptz
-	UpdatedAt pgtype.Timestamptz
-	RowsCount int64
+	ID          int64
+	Name        string
+	Version     string
+	Status      DatasetStatus
+	CreatorID   int64
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
+	RowsCount   int64
+	UploadError pgtype.Text
 }
 
 func (q *Queries) GetDataset(ctx context.Context, id int64) (GetDatasetRow, error) {
@@ -65,6 +67,7 @@ func (q *Queries) GetDataset(ctx context.Context, id int64) (GetDatasetRow, erro
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.RowsCount,
+		&i.UploadError,
 	)
 	return i, err
 }
@@ -151,6 +154,25 @@ func (q *Queries) GetUserDatasets(ctx context.Context, arg GetUserDatasetsParams
 		return nil, err
 	}
 	return items, nil
+}
+
+const setErrorStatus = `-- name: SetErrorStatus :exec
+update datasets
+set status    = $2,
+    updated_at = now(),
+    upload_error = $3
+where id = $1
+`
+
+type SetErrorStatusParams struct {
+	ID          int64
+	Status      DatasetStatus
+	UploadError pgtype.Text
+}
+
+func (q *Queries) SetErrorStatus(ctx context.Context, arg SetErrorStatusParams) error {
+	_, err := q.db.Exec(ctx, setErrorStatus, arg.ID, arg.Status, arg.UploadError)
+	return err
 }
 
 const setStatus = `-- name: SetStatus :exec

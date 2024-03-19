@@ -35,13 +35,14 @@ func (d *datasetsService) GetDataset(ctx context.Context, request *pb.GetDataset
 
 	return &pb.GetDatasetResponse{
 		Dataset: &pb.Dataset{
-			Id:        dataset.ID,
-			Name:      dataset.Name,
-			Version:   dataset.Version,
-			Status:    convertStatus(dataset.Status),
-			RowsCount: uint64(dataset.RowsCount),
-			CreatedAt: timestamppb.New(dataset.CreatedAt.Time),
-			UpdatedAt: timestamppb.New(dataset.UpdatedAt.Time),
+			Id:          dataset.ID,
+			Name:        dataset.Name,
+			Version:     dataset.Version,
+			Status:      convertStatus(dataset.Status),
+			RowsCount:   uint64(dataset.RowsCount),
+			CreatedAt:   timestamppb.New(dataset.CreatedAt.Time),
+			UpdatedAt:   timestamppb.New(dataset.UpdatedAt.Time),
+			UploadError: dataset.UploadError.String,
 		},
 	}, nil
 }

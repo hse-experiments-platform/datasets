@@ -9,6 +9,7 @@ import (
 	"github.com/hse-experiments-platform/datasets/internal/pkg/domain/dataset"
 	"github.com/hse-experiments-platform/datasets/internal/pkg/storage/db"
 	"github.com/hse-experiments-platform/datasets/internal/pkg/utils"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/opensaucerer/grab/v3"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
@@ -57,7 +58,7 @@ func (d *datasetsService) uploadFromURL(ctx context.Context, addr string, datase
 		// check for errors
 		if err := r.Err(); err != nil {
 			log.Error().Err(err).Msg("file download failed")
-			if err := d.setFailedUpload(ctx, datasetID); err != nil {
+			if err := d.setFailedUpload(ctx, datasetID, "cannot download dataset by link"); err != nil {
 				log.Error().Err(err).Msg("cannot set failed upload status")
 			}
 			return
@@ -65,7 +66,7 @@ func (d *datasetsService) uploadFromURL(ctx context.Context, addr string, datase
 
 		if err := writer.Flush(); err != nil {
 			log.Error().Err(err).Msg("file download failed: flush error")
-			if err := d.setFailedUpload(ctx, datasetID); err != nil {
+			if err := d.setFailedUpload(ctx, datasetID, "internal: flush error"); err != nil {
 				log.Error().Err(err).Msg("cannot set failed upload status")
 			}
 			return
@@ -74,7 +75,7 @@ func (d *datasetsService) uploadFromURL(ctx context.Context, addr string, datase
 		c := builder.GetRowsCount()
 		if c == -1 {
 			log.Error().Err(err).Msg("dataset wasn't parsed properly")
-			if err := d.setFailedUpload(ctx, datasetID); err != nil {
+			if err := d.setFailedUpload(ctx, datasetID, fmt.Sprintf("dataset isn't valid csv file")); err != nil {
 				log.Error().Err(err).Msg("cannot set failed upload status")
 			}
 			return
@@ -89,7 +90,7 @@ func (d *datasetsService) uploadFromURL(ctx context.Context, addr string, datase
 			RowsCount: c,
 		}); err != nil {
 			log.Error().Err(err).Msg("cannot update meta for uploaded dataset")
-			if err := d.setFailedUpload(ctx, datasetID); err != nil {
+			if err := d.setFailedUpload(ctx, datasetID, "internal: cannot update meta for uploaded dataset"); err != nil {
 				log.Error().Err(err).Msg("cannot set failed upload status")
 			}
 		}
@@ -110,11 +111,12 @@ func (d *datasetsService) uploadFromURL(ctx context.Context, addr string, datase
 	return nil
 }
 
-func (d *datasetsService) setFailedUpload(ctx context.Context, datasetID int64) error {
-	log.Error().Int64("datasetID", datasetID).Msg("dataset upload attempt failed")
-	if err := d.commonDB.SetStatus(ctx, db.SetStatusParams{
-		ID:     datasetID,
-		Status: db.DatasetStatusError,
+func (d *datasetsService) setFailedUpload(ctx context.Context, datasetID int64, reason string) error {
+	log.Error().Int64("datasetID", datasetID).Str("reason", reason).Msg("dataset upload attempt failed")
+	if err := d.commonDB.SetErrorStatus(ctx, db.SetErrorStatusParams{
+		ID:          datasetID,
+		Status:      db.DatasetStatusError,
+		UploadError: pgtype.Text{String: reason, Valid: true},
 	}); err != nil {
 		return fmt.Errorf("d.commonDB.SetStatus: %w", err)
 	}

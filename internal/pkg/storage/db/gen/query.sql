@@ -24,6 +24,13 @@ set status    = $2,
     updated_at = now()
 where id = $1;
 
+-- name: SetErrorStatus :exec
+update datasets
+set status    = $2,
+    updated_at = now(),
+    upload_error = $3
+where id = $1;
+
 -- name: GetUserDatasets :many
 select id,
        name,
@@ -43,7 +50,8 @@ select id,
        creator_id,
        created_at,
        updated_at,
-       rows_count
+       rows_count,
+       upload_error
 from datasets
 where id = $1;
 

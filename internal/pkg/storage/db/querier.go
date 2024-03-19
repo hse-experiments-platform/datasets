@@ -14,6 +14,7 @@ type Querier interface {
 	GetDatasetCreator(ctx context.Context, id int64) (int64, error)
 	GetDatasetStatus(ctx context.Context, id int64) (DatasetStatus, error)
 	GetUserDatasets(ctx context.Context, arg GetUserDatasetsParams) ([]GetUserDatasetsRow, error)
+	SetErrorStatus(ctx context.Context, arg SetErrorStatusParams) error
 	SetStatus(ctx context.Context, arg SetStatusParams) error
 	UpdateAfterUpload(ctx context.Context, arg UpdateAfterUploadParams) error
 	UpdateData(ctx context.Context, arg UpdateDataParams) error
