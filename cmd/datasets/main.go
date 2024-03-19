@@ -116,6 +116,7 @@ func runHTTP(ctx context.Context, c context.CancelFunc, grpcAddr string) {
 
 	mux := http.NewServeMux()
 	// mount the gRPC HTTP gateway to the root
+	mux.Handle("/", rmux)
 	fs := http.FileServer(http.Dir("./swagger"))
 	mux.Handle("/swagger/", http.StripPrefix("/swagger/", fs))
 
