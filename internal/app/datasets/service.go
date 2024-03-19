@@ -7,7 +7,7 @@ import (
 	"github.com/hse-experiments-platform/datasets/internal/pkg/storage/db"
 	pb "github.com/hse-experiments-platform/datasets/pkg/datasets"
 	"github.com/hse-experiments-platform/library/pkg/utils/token"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -17,15 +17,15 @@ var _ pb.DatasetsServiceServer = (*datasetsService)(nil)
 
 type datasetsService struct {
 	pb.UnimplementedDatasetsServiceServer
-	datasetsDBConn *pgx.Conn
-	commonDBConn   *pgx.Conn
+	datasetsDBConn *pgxpool.Pool
+	commonDBConn   *pgxpool.Pool
 	maker          token.Maker
 
 	commonDB   *db.Queries
 	datasetsDB *datasetsdb.Queries
 }
 
-func NewService(commonDBConn, datasetsDBConn *pgx.Conn, maker token.Maker) *datasetsService {
+func NewService(commonDBConn, datasetsDBConn *pgxpool.Pool, maker token.Maker) *datasetsService {
 	return &datasetsService{
 		commonDBConn:   commonDBConn,
 		datasetsDBConn: datasetsDBConn,

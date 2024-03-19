@@ -15,11 +15,12 @@ import (
 	osinit "github.com/hse-experiments-platform/library/pkg/utils/init"
 	"github.com/hse-experiments-platform/library/pkg/utils/loggers"
 	"github.com/hse-experiments-platform/library/pkg/utils/token"
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	"github.com/rs/cors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
@@ -33,17 +34,17 @@ func loadEnv() {
 	}
 }
 
-func initDB(ctx context.Context, dsnOSKey string) *pgx.Conn {
-	c, err := pgx.Connect(ctx, osinit.MustLoadEnv(dsnOSKey))
+func initDB(ctx context.Context, dsnOSKey string) *pgxpool.Pool {
+	pool, err := pgxpool.New(ctx, osinit.MustLoadEnv(dsnOSKey))
 	if err != nil {
 		log.Fatal().Err(err).Str("dsn", osinit.MustLoadEnv(dsnOSKey)).Msg("cannot osinit db")
 	}
 
-	if err = c.Ping(ctx); err != nil {
+	if err = pool.Ping(ctx); err != nil {
 		log.Fatal().Err(err).Msg("cannot connect to db")
 	}
 
-	return c
+	return pool
 }
 
 func initService(ctx context.Context, maker token.Maker) pb.DatasetsServiceServer {
@@ -115,7 +116,6 @@ func runHTTP(ctx context.Context, c context.CancelFunc, grpcAddr string) {
 
 	mux := http.NewServeMux()
 	// mount the gRPC HTTP gateway to the root
-	mux.Handle("/", rmux)
 	fs := http.FileServer(http.Dir("./swagger"))
 	mux.Handle("/swagger/", http.StripPrefix("/swagger/", fs))
 
