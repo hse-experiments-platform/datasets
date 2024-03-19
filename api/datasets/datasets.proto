@@ -139,6 +139,7 @@ message Dataset {
   uint64 rowsCount = 5;
   google.protobuf.Timestamp created_at = 6;
   google.protobuf.Timestamp updated_at = 7;
+  string uploadError = 8;
 }
 
 message GetDatasetResponse {
