@@ -83,7 +83,9 @@ func (d *datasetsService) getChunks(ctx context.Context, offset, limit int64, da
 func (d *datasetsService) getRows(ctx context.Context, request *pb.GetDatasetRowsRequest, resp *pb.GetDatasetRowsResponse) func(tx pgx.Tx) error {
 	return func(tx pgx.Tx) error {
 		borders, err := d.datasetsDB.GetDatasetChunkBorders(ctx, request.GetDatasetID())
-		if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return status.Error(codes.InvalidArgument, "dataset is not uploaded yet")
+		} else if err != nil {
 			return fmt.Errorf("d.datasetsDB.GetDatasetChunkBorders: %w", err)
 		} else if len(borders.MaxRowNumber) == 0 || len(borders.MinRowNumber) == 0 {
 			resp = &pb.GetDatasetRowsResponse{
