@@ -105,7 +105,9 @@ select id,
        status,
        count(1) over () as count
 from datasets
-where creator_id = $1 and name like $4 and status = any($5::dataset_status[])
+where creator_id = $1
+  and name like $4
+  and status = any ($5::dataset_status[])
 order by created_at desc
 limit $2 offset $3
 `
@@ -158,10 +160,35 @@ func (q *Queries) GetUserDatasets(ctx context.Context, arg GetUserDatasetsParams
 	return items, nil
 }
 
+const setDatasetSchema = `-- name: SetDatasetSchema :exec
+insert into dataset_schemas (dataset_id, column_number, column_name, column_type)
+select $1,
+       unnest($2::int[]),
+       unnest($3::text[]),
+       unnest($4::text[])
+`
+
+type SetDatasetSchemaParams struct {
+	DatasetID   int64
+	Indexes     []int32
+	ColumnNames []string
+	ColumnTypes []string
+}
+
+func (q *Queries) SetDatasetSchema(ctx context.Context, arg SetDatasetSchemaParams) error {
+	_, err := q.db.Exec(ctx, setDatasetSchema,
+		arg.DatasetID,
+		arg.Indexes,
+		arg.ColumnNames,
+		arg.ColumnTypes,
+	)
+	return err
+}
+
 const setErrorStatus = `-- name: SetErrorStatus :exec
 update datasets
-set status    = $2,
-    updated_at = now(),
+set status       = $2,
+    updated_at   = now(),
     upload_error = $3
 where id = $1
 `
@@ -179,7 +206,7 @@ func (q *Queries) SetErrorStatus(ctx context.Context, arg SetErrorStatusParams) 
 
 const setStatus = `-- name: SetStatus :exec
 update datasets
-set status    = $2,
+set status     = $2,
     updated_at = now()
 where id = $1
 `

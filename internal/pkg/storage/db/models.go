@@ -55,6 +55,49 @@ func (ns NullDatasetStatus) Value() (driver.Value, error) {
 	return string(ns.DatasetStatus), nil
 }
 
+type LaunchType string
+
+const (
+	LaunchTypeTrain   LaunchType = "train"
+	LaunchTypePredict LaunchType = "predict"
+	LaunchTypeGeneric LaunchType = "generic"
+)
+
+func (e *LaunchType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = LaunchType(s)
+	case string:
+		*e = LaunchType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for LaunchType: %T", src)
+	}
+	return nil
+}
+
+type NullLaunchType struct {
+	LaunchType LaunchType
+	Valid      bool // Valid is true if LaunchType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullLaunchType) Scan(value interface{}) error {
+	if value == nil {
+		ns.LaunchType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.LaunchType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullLaunchType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.LaunchType), nil
+}
+
 type ModelTrainingStatus string
 
 const (
@@ -111,6 +154,13 @@ type Dataset struct {
 	UploadError pgtype.Text
 }
 
+type DatasetSchema struct {
+	DatasetID    int64
+	ColumnNumber int32
+	ColumnName   string
+	ColumnType   string
+}
+
 type Hyperparameter struct {
 	ID           int64
 	Name         string
@@ -120,6 +170,17 @@ type Hyperparameter struct {
 	ModelID      pgtype.Int8
 	CreatedAt    pgtype.Timestamptz
 	UpdatedAt    pgtype.Timestamptz
+}
+
+type Launch struct {
+	ID          int64
+	LaunchType  LaunchType
+	Name        string
+	Description string
+	CreatedAt   pgtype.Timestamptz
+	UpdatedAt   pgtype.Timestamptz
+	FinishedAt  pgtype.Timestamptz
+	LaunchError pgtype.Text
 }
 
 type Metric struct {
@@ -139,6 +200,14 @@ type Model struct {
 	UpdatedAt   pgtype.Timestamptz
 }
 
+type PredictResult struct {
+	LaunchID        int64
+	TrainedModelID  int64
+	InputDatasetID  int64
+	Status          DatasetStatus
+	OutputDatasetID int64
+}
+
 type Problem struct {
 	ID          int64
 	Name        string
@@ -152,17 +221,25 @@ type ProblemMetric struct {
 	MetricID  int64
 }
 
+type TrainMetric struct {
+	LaunchID       int64
+	TrainedModelID int64
+	MetricID       int64
+	Value          []byte
+}
+
 type TrainedModel struct {
 	ID                  int64
 	Name                string
 	Description         string
-	ModelID             pgtype.Int8
+	ModelID             int64
 	ModelTrainingStatus ModelTrainingStatus
-	TrainingDatasetID   pgtype.Int8
+	TrainingDatasetID   int64
 	TargetColumn        string
 	TrainError          pgtype.Text
 	CreatedAt           pgtype.Timestamptz
 	UpdatedAt           pgtype.Timestamptz
+	LaunchID            int64
 }
 
 type User struct {

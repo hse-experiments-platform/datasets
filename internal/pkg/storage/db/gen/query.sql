@@ -20,14 +20,14 @@ where id = $1;
 
 -- name: SetStatus :exec
 update datasets
-set status    = $2,
+set status     = $2,
     updated_at = now()
 where id = $1;
 
 -- name: SetErrorStatus :exec
 update datasets
-set status    = $2,
-    updated_at = now(),
+set status       = $2,
+    updated_at   = now(),
     upload_error = $3
 where id = $1;
 
@@ -38,7 +38,9 @@ select id,
        status,
        count(1) over () as count
 from datasets
-where creator_id = $1 and name like $4 and status = any($5::dataset_status[])
+where creator_id = $1
+  and name like $4
+  and status = any ($5::dataset_status[])
 order by created_at desc
 limit $2 offset $3;
 
@@ -65,3 +67,9 @@ select status
 from datasets
 where id = $1;
 
+-- name: SetDatasetSchema :exec
+insert into dataset_schemas (dataset_id, column_number, column_name, column_type)
+select $1,
+       unnest(sqlc.arg(indexes)::int[]),
+       unnest(sqlc.arg(column_names)::text[]),
+       unnest(sqlc.arg(column_types)::text[]);

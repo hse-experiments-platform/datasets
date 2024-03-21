@@ -94,6 +94,15 @@ func (d *datasetsService) uploadFromURL(ctx context.Context, addr string, datase
 				log.Error().Err(err).Msg("cannot set failed upload status")
 			}
 		}
+		params := db.SetDatasetSchemaParams{DatasetID: datasetID}
+		for i, v := range builder.Schema {
+			params.Indexes = append(params.Indexes, int32(i))
+			params.ColumnNames = append(params.ColumnNames, v.Name)
+			params.ColumnTypes = append(params.ColumnTypes, dataset.TypeToString[v.Type])
+		}
+		if err := d.commonDB.SetDatasetSchema(ctx, params); err != nil {
+			log.Error().Err(err).Msg("d.commonDB.SetDatasetSchema")
+		}
 	}(resp)
 
 	// cancel on timeout
