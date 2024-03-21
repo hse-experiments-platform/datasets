@@ -105,7 +105,7 @@ select id,
        status,
        count(1) over () as count
 from datasets
-where creator_id = $1 and name like $4
+where creator_id = $1 and name like $4 and status = any($5::dataset_status[])
 order by created_at desc
 limit $2 offset $3
 `
@@ -115,6 +115,7 @@ type GetUserDatasetsParams struct {
 	Limit     int64
 	Offset    int64
 	Name      string
+	Column5   []DatasetStatus
 }
 
 type GetUserDatasetsRow struct {
@@ -131,6 +132,7 @@ func (q *Queries) GetUserDatasets(ctx context.Context, arg GetUserDatasetsParams
 		arg.Limit,
 		arg.Offset,
 		arg.Name,
+		arg.Column5,
 	)
 	if err != nil {
 		return nil, err

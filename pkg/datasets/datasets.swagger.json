@@ -215,6 +215,30 @@
             "in": "query",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "statuses.includeInitializing",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "statuses.includeLoading",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "statuses.includeReady",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "statuses.includeError",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -325,6 +349,23 @@
         "Error"
       ],
       "default": "Unknown"
+    },
+    "datasetsDatasetStatusFilter": {
+      "type": "object",
+      "properties": {
+        "includeInitializing": {
+          "type": "boolean"
+        },
+        "includeLoading": {
+          "type": "boolean"
+        },
+        "includeReady": {
+          "type": "boolean"
+        },
+        "includeError": {
+          "type": "boolean"
+        }
+      }
     },
     "datasetsGetDatasetResponse": {
       "type": "object",

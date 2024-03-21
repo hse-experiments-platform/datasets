@@ -99,6 +99,7 @@ message GetDatasetsRequest {
   uint64 limit = 1;
   uint64 offset = 2;
   string query = 3;
+  DatasetStatusFilter statuses = 4;
 };
 
 enum DatasetStatus {
@@ -125,6 +126,13 @@ message PageInfo {
 message GetDatasetsResponse {
   repeated ShortDatasetInfo datasets = 1;
   PageInfo pageInfo = 2;
+}
+
+message DatasetStatusFilter {
+  bool includeInitializing = 1;
+  bool includeLoading = 2;
+  bool includeReady = 3;
+  bool includeError = 4;
 }
 
 message GetDatasetRequest {

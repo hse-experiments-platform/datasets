@@ -38,7 +38,7 @@ select id,
        status,
        count(1) over () as count
 from datasets
-where creator_id = $1 and name like $4
+where creator_id = $1 and name like $4 and status = any($5::dataset_status[])
 order by created_at desc
 limit $2 offset $3;
 
