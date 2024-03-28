@@ -8,7 +8,8 @@ update datasets
 set status     = $2,
     version    = $3,
     rows_count = $4,
-    updated_at = now()
+    updated_at = now(),
+    upload_error = ''
 where id = $1;
 
 -- name: UpdateData :exec
