@@ -29,6 +29,23 @@ func (q *Queries) CreateDataset(ctx context.Context, arg CreateDatasetParams) (i
 	return id, err
 }
 
+const dropColumnsByType = `-- name: DropColumnsByType :exec
+delete
+from dataset_schemas
+where dataset_id = $1
+  and column_type = $2
+`
+
+type DropColumnsByTypeParams struct {
+	DatasetID  int64
+	ColumnType string
+}
+
+func (q *Queries) DropColumnsByType(ctx context.Context, arg DropColumnsByTypeParams) error {
+	_, err := q.db.Exec(ctx, dropColumnsByType, arg.DatasetID, arg.ColumnType)
+	return err
+}
+
 const getDataset = `-- name: GetDataset :one
 select id,
        name,

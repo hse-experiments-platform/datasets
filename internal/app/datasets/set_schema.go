@@ -31,11 +31,11 @@ func (d *datasetsService) SetDatasetColumnTypes(ctx context.Context, req *pb.Set
 		return nil, err
 	}
 
-	st, err := d.commonDB.GetDatasetStatus(ctx, req.GetDatasetID())
+	dataset, err := d.commonDB.GetDataset(ctx, req.GetDatasetID())
 	if err != nil {
-		return nil, fmt.Errorf("d.commonDB.GetDatasetStatus: %w", err)
-	} else if st != db.DatasetStatusWaitsConvertation {
-		return nil, status.Errorf(codes.InvalidArgument, "dataset must be in status %v, got %v", db.DatasetStatusWaitsConvertation, st)
+		return nil, fmt.Errorf("d.commonDB.GetDataset: %w", err)
+	} else if dataset.Status != db.DatasetStatusWaitsConvertation && dataset.Status != db.DatasetStatusConvertationError {
+		return nil, status.Errorf(codes.InvalidArgument, "dataset must be in status %v, got %v", db.DatasetStatusWaitsConvertation, dataset.Status)
 	}
 
 	schemaRows, err := d.commonDB.GetDatasetSchema(ctx, req.GetDatasetID())
@@ -62,7 +62,7 @@ func (d *datasetsService) SetDatasetColumnTypes(ctx context.Context, req *pb.Set
 
 		dbReq.Indexes[i] = int32(i)
 		dbReq.ColumnNames[i] = row.ColumnName
-		if t == pb.ColumnType_ColumnTypeNotSelected {
+		if t == pb.ColumnType_ColumnTypeUndefined {
 			return nil, status.Errorf(codes.InvalidArgument, "column type for column %s not selected", row.ColumnName)
 		}
 		dbReq.ColumnTypes[i] = models.TypeToString[convertColumnTypePB(t)]
@@ -91,7 +91,7 @@ func (d *datasetsService) SetDatasetColumnTypes(ctx context.Context, req *pb.Set
 			return fmt.Errorf("txdb.SetStatus: %w", err)
 		}
 
-		if err = d.setColumnTypes(dbReq); err != nil {
+		if err = d.setColumnTypes(ctx, dbReq, dataset.RowsCount); err != nil {
 			return fmt.Errorf("d.setColumnTypes: %w", err)
 		}
 

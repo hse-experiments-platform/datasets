@@ -83,3 +83,9 @@ select column_name, column_type
 from dataset_schemas
 where dataset_id = $1
 order by column_number;
+
+-- name: DropColumnsByType :exec
+delete
+from dataset_schemas
+where dataset_id = $1
+  and column_type = $2;

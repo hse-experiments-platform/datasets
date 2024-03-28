@@ -6,12 +6,15 @@ COPY . .
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o ./bin/datasets ./cmd/datasets/main.go
 
-FROM alpine:latest
+FROM python:3.11-alpine
+
+RUN pip install --no-cache-dir  numpy requests pandas fire
 
 WORKDIR /build
 
 COPY configs /build/configs
 COPY swagger /build/swagger
+COPY scripts /build/scripts
 COPY --from=builder /build/bin/datasets /build/bin/datasets
 
 CMD ["./bin/datasets"]

@@ -31,7 +31,9 @@ func convertStatus(s db.DatasetStatus) pb.DatasetStatus {
 
 func convertColumnTypePB(t pb.ColumnType) models.ColumnType {
 	switch t {
-	case pb.ColumnType_ColumnTypeNotSelected, pb.ColumnType_ColumnTypeString:
+	case pb.ColumnType_ColumnTypeUndefined:
+		return models.ColumnTypeUndefined
+	case pb.ColumnType_ColumnTypeString:
 		return models.ColumnTypeString
 	case pb.ColumnType_ColumnTypeInteger:
 		return models.ColumnTypeInteger

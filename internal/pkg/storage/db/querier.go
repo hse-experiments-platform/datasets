@@ -10,6 +10,7 @@ import (
 
 type Querier interface {
 	CreateDataset(ctx context.Context, arg CreateDatasetParams) (int64, error)
+	DropColumnsByType(ctx context.Context, arg DropColumnsByTypeParams) error
 	GetDataset(ctx context.Context, id int64) (GetDatasetRow, error)
 	GetDatasetCreator(ctx context.Context, id int64) (int64, error)
 	GetDatasetSchema(ctx context.Context, datasetID int64) ([]GetDatasetSchemaRow, error)

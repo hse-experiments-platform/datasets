@@ -3,7 +3,8 @@ package models
 type ColumnType uint8
 
 const (
-	ColumnTypeString ColumnType = iota
+	ColumnTypeUndefined ColumnType = iota
+	ColumnTypeString
 	ColumnTypeInteger
 	ColumnTypeFloat
 	ColumnTypeCategorial
@@ -11,6 +12,7 @@ const (
 )
 
 var TypeToString = map[ColumnType]string{
+	ColumnTypeUndefined:  "undefined",
 	ColumnTypeString:     "string",
 	ColumnTypeInteger:    "int",
 	ColumnTypeFloat:      "float",

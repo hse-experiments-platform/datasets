@@ -36,7 +36,7 @@ func (b *Builder) initSchema(columns []string) {
 	for _, c := range columns {
 		b.Schema = append(b.Schema, models.Column{
 			Name: c,
-			Type: models.ColumnTypeString,
+			Type: models.ColumnTypeUndefined,
 		})
 	}
 

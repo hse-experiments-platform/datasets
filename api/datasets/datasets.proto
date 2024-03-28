@@ -198,7 +198,7 @@ message GetDatasetRowsResponse {
 }
 
 enum ColumnType {
-  ColumnTypeNotSelected = 0;
+  ColumnTypeUndefined = 0;
   ColumnTypeInteger = 1;
   ColumnTypeFloat = 2;
   ColumnTypeCategorial = 3;

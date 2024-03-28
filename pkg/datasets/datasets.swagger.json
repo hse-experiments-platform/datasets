@@ -361,14 +361,14 @@
     "datasetsColumnType": {
       "type": "string",
       "enum": [
-        "ColumnTypeNotSelected",
+        "ColumnTypeUndefined",
         "ColumnTypeInteger",
         "ColumnTypeFloat",
         "ColumnTypeCategorial",
         "ColumnTypeString",
         "ColumnTypeDropped"
       ],
-      "default": "ColumnTypeNotSelected"
+      "default": "ColumnTypeUndefined"
     },
     "datasetsCreateDatasetRequest": {
       "type": "object",
