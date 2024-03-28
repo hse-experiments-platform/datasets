@@ -85,6 +85,38 @@ func (q *Queries) GetDatasetCreator(ctx context.Context, id int64) (int64, error
 	return creator_id, err
 }
 
+const getDatasetSchema = `-- name: GetDatasetSchema :many
+select column_name, column_type
+from dataset_schemas
+where dataset_id = $1
+order by column_number
+`
+
+type GetDatasetSchemaRow struct {
+	ColumnName string
+	ColumnType string
+}
+
+func (q *Queries) GetDatasetSchema(ctx context.Context, datasetID int64) ([]GetDatasetSchemaRow, error) {
+	rows, err := q.db.Query(ctx, getDatasetSchema, datasetID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetDatasetSchemaRow
+	for rows.Next() {
+		var i GetDatasetSchemaRow
+		if err := rows.Scan(&i.ColumnName, &i.ColumnType); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getDatasetStatus = `-- name: GetDatasetStatus :one
 select status
 from datasets
@@ -113,11 +145,11 @@ limit $2 offset $3
 `
 
 type GetUserDatasetsParams struct {
-	CreatorID int64
-	Limit     int64
-	Offset    int64
-	Name      string
-	Column5   []DatasetStatus
+	CreatorID       int64
+	Limit           int64
+	Offset          int64
+	Name            string
+	AllowedStatuses []DatasetStatus
 }
 
 type GetUserDatasetsRow struct {
@@ -134,7 +166,7 @@ func (q *Queries) GetUserDatasets(ctx context.Context, arg GetUserDatasetsParams
 		arg.Limit,
 		arg.Offset,
 		arg.Name,
-		arg.Column5,
+		arg.AllowedStatuses,
 	)
 	if err != nil {
 		return nil, err
@@ -166,6 +198,9 @@ select $1,
        unnest($2::int[]),
        unnest($3::text[]),
        unnest($4::text[])
+on conflict (dataset_id, column_number) do update
+    set column_name = excluded.column_name,
+        column_type = excluded.column_type
 `
 
 type SetDatasetSchemaParams struct {

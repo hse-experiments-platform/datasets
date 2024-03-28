@@ -40,7 +40,7 @@ select id,
 from datasets
 where creator_id = $1
   and name like $4
-  and status = any ($5::dataset_status[])
+  and status = any (sqlc.arg(allowed_statuses)::dataset_status[])
 order by created_at desc
 limit $2 offset $3;
 
@@ -72,4 +72,14 @@ insert into dataset_schemas (dataset_id, column_number, column_name, column_type
 select $1,
        unnest(sqlc.arg(indexes)::int[]),
        unnest(sqlc.arg(column_names)::text[]),
-       unnest(sqlc.arg(column_types)::text[]);
+       unnest(sqlc.arg(column_types)::text[])
+on conflict (dataset_id, column_number) do update
+    set column_name = excluded.column_name,
+        column_type = excluded.column_type
+;
+
+-- name: GetDatasetSchema :many
+select column_name, column_type
+from dataset_schemas
+where dataset_id = $1
+order by column_number;

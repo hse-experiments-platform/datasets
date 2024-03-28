@@ -37,7 +37,7 @@ option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
 service DatasetsService {
   rpc CreateDataset (CreateDatasetRequest) returns (CreateDatasetResponse) {
     option (google.api.http) = {
-      post: "/api/v1/dataset"
+      post: "/api/v1/datasets"
       body: "*"
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
@@ -46,7 +46,7 @@ service DatasetsService {
   };
   rpc UploadDatasetByLink (UploadDatasetByLinkRequest) returns (UploadDatasetByLinkResponse) {
     option (google.api.http) = {
-      post: "/api/v1/dataset/upload/link"
+      post: "/api/v1/datasets/{datasetID}/upload/link"
       body: "*"
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
@@ -63,7 +63,7 @@ service DatasetsService {
   };
   rpc GetDataset (GetDatasetRequest) returns (GetDatasetResponse) {
     option (google.api.http) = {
-      get: "/api/v1/dataset"
+      get: "/api/v1/datasets/{datasetID}"
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {security_requirement: {key: "AccessToken";value: {}}}
@@ -71,12 +71,22 @@ service DatasetsService {
   };
   rpc GetDatasetRows (GetDatasetRowsRequest) returns (GetDatasetRowsResponse) {
     option (google.api.http) = {
-      get: "/api/v1/dataset/rows"
+      get: "/api/v1/datasets/{datasetID}/rows"
     };
     option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {security_requirement: {key: "AccessToken";value: {}}}
     };
   };
+
+  rpc SetDatasetColumnTypes (SetDatasetColumnTypesRequest) returns (SetDatasetColumnTypesResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/datasets/{datasetID}/schema"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {security_requirement: {key: "AccessToken";value: {}}}
+    };
+  }
 }
 
 message CreateDatasetRequest {
@@ -106,8 +116,11 @@ enum DatasetStatus {
   Unknown = 0;
   Initializing = 1;
   Loading = 2;
-  Ready = 3;
-  Error = 4;
+  LoadingError = 3;
+  WaitsConvertation = 4;
+  ConvertationInProgress = 5;
+  ConvertationError = 6;
+  Ready = 7;
 }
 
 message ShortDatasetInfo {
@@ -129,10 +142,14 @@ message GetDatasetsResponse {
 }
 
 message DatasetStatusFilter {
-  bool includeInitializing = 1;
-  bool includeLoading = 2;
-  bool includeReady = 3;
-  bool includeError = 4;
+  bool includeUnknown = 1;
+  bool includeInitializing = 2;
+  bool includeLoading = 3;
+  bool includeLoadingError = 4;
+  bool includeWaitsConvertation = 5;
+  bool includeConvertationInProgress = 6;
+  bool includeConvertationError = 7;
+  bool includeReady = 8;
 }
 
 message GetDatasetRequest {
@@ -152,6 +169,7 @@ message Dataset {
 
 message GetDatasetResponse {
   Dataset dataset = 1;
+  DatasetSchema schema = 2;
 }
 
 message GetDatasetRowsRequest {
@@ -176,6 +194,22 @@ message DatasetSchema {
 
 message GetDatasetRowsResponse {
   repeated DatasetRow rows = 1;
-  DatasetSchema schema = 2;
   PageInfo pageInfo = 3;
+}
+
+enum ColumnType {
+  ColumnTypeNotSelected = 0;
+  ColumnTypeInteger = 1;
+  ColumnTypeFloat = 2;
+  ColumnTypeCategorial = 3;
+  ColumnTypeString = 4;
+  ColumnTypeDropped = 5;
+}
+
+message SetDatasetColumnTypesRequest {
+  int64 datasetID = 1;
+  map<string, ColumnType> columnTypes = 2;
+}
+
+message SetDatasetColumnTypesResponse {
 }

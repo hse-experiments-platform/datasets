@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/hse-experiments-platform/datasets/internal/pkg/models"
 	"github.com/hse-experiments-platform/datasets/internal/pkg/storage/datasetsdb"
 	"github.com/rs/zerolog/log"
 )
@@ -15,7 +16,7 @@ import (
 type Builder struct {
 	DatasetsDB datasetsdb.Querier
 	DatasetID  int64
-	Schema     Schema
+	Schema     models.Schema
 	Ctx        context.Context
 
 	prevRowPrefix []byte
@@ -33,9 +34,9 @@ func NewBuilder(ctx context.Context, db datasetsdb.Querier, datasetID int64) *Bu
 
 func (b *Builder) initSchema(columns []string) {
 	for _, c := range columns {
-		b.Schema = append(b.Schema, Column{
+		b.Schema = append(b.Schema, models.Column{
 			Name: c,
-			Type: CSVTypeAny,
+			Type: models.ColumnTypeString,
 		})
 	}
 
@@ -67,7 +68,7 @@ func (b *Builder) ProcessChunk(data []byte) error {
 			b.prevRowPrefix = parsingData[prevOffset:]
 			break
 		} else if err != nil {
-			log.Error().Err(err).Msg("cannot read csv row")
+			log.Error().Str("data", string(data)).Err(err).Msg("cannot read csv row")
 			return err
 		}
 

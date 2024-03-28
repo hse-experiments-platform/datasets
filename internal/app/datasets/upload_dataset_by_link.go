@@ -13,7 +13,7 @@ import (
 
 var availableStatuses = map[db.DatasetStatus]bool{
 	db.DatasetStatusInitializing: true,
-	db.DatasetStatusError:        true,
+	db.DatasetStatusLoadingError: true,
 }
 
 func (d *datasetsService) prepareForUploadFunc(ctx context.Context, datasetID int64) func(tx pgx.Tx) error {

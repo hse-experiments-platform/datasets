@@ -109,20 +109,6 @@ func (d *datasetsService) getRows(ctx context.Context, request *pb.GetDatasetRow
 		buff := bytes.NewBuffer(nil)
 		reader := csv.NewReader(buff)
 
-		schema, err := d.getChunks(ctx, 0, 1, request.GetDatasetID(), borders, reader, buff)
-		if err != nil {
-			return fmt.Errorf("schema d.getChunks: %w", err)
-		} else if len(schema) != 1 {
-			return fmt.Errorf("wrong result len: d.getChunks, expected 1, got %v", len(schema))
-		}
-		resp.Schema = &pb.DatasetSchema{Columns: make([]*pb.DatasetSchema_SchemaColumn, 0, len(schema[0]))}
-		for _, c := range schema[0] {
-			resp.Schema.Columns = append(resp.Schema.Columns, &pb.DatasetSchema_SchemaColumn{
-				Name: c,
-				Type: "string",
-			})
-		}
-
 		// переводим в 1-нумерцию так как 0 строчка это названия колонок
 		offset := request.GetOffset() + 1
 		limit := request.GetLimit()

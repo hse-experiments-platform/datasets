@@ -20,7 +20,7 @@ func (d *datasetsService) GetDatasets(ctx context.Context, request *pb.GetDatase
 		return nil, err
 	}
 
-	statuses := []db.DatasetStatus{}
+	var statuses []db.DatasetStatus
 	if filter := request.GetStatuses(); filter != nil {
 		if filter.IncludeInitializing {
 			statuses = append(statuses, db.DatasetStatusInitializing)
@@ -28,23 +28,35 @@ func (d *datasetsService) GetDatasets(ctx context.Context, request *pb.GetDatase
 		if filter.IncludeLoading {
 			statuses = append(statuses, db.DatasetStatusLoading)
 		}
-		if filter.IncludeError {
-			statuses = append(statuses, db.DatasetStatusError)
+		if filter.IncludeLoadingError {
+			statuses = append(statuses, db.DatasetStatusLoadingError)
+		}
+		if filter.IncludeWaitsConvertation {
+			statuses = append(statuses, db.DatasetStatusWaitsConvertation)
+		}
+		if filter.IncludeConvertationInProgress {
+			statuses = append(statuses, db.DatasetStatusConvertationInProgress)
+		}
+		if filter.IncludeConvertationError {
+			statuses = append(statuses, db.DatasetStatusConvertationError)
 		}
 		if filter.IncludeReady {
 			statuses = append(statuses, db.DatasetStatusReady)
 		}
 	} else {
-		statuses = append(statuses, db.DatasetStatusInitializing, db.DatasetStatusLoading, db.DatasetStatusError, db.DatasetStatusReady)
+		statuses = append(statuses, db.DatasetStatusValue0, db.DatasetStatusInitializing, db.DatasetStatusLoading,
+			db.DatasetStatusWaitsConvertation, db.DatasetStatusLoadingError, db.DatasetStatusConvertationInProgress,
+			db.DatasetStatusConvertationError, db.DatasetStatusReady,
+		)
 	}
 
 	query := "%" + request.GetQuery() + "%"
 	rows, err := d.commonDB.GetUserDatasets(ctx, db.GetUserDatasetsParams{
-		CreatorID: userID,
-		Limit:     int64(request.GetLimit()),
-		Offset:    int64(request.GetOffset()),
-		Name:      query,
-		Column5:   statuses,
+		CreatorID:       userID,
+		Limit:           int64(request.GetLimit()),
+		Offset:          int64(request.GetOffset()),
+		Name:            query,
+		AllowedStatuses: statuses,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("d.commonDB.GetUserDatasets: %w", err)

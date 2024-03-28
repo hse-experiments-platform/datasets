@@ -19,11 +19,12 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	DatasetsService_CreateDataset_FullMethodName       = "/github.hse_experiments_platform.datasets.api.datasets.DatasetsService/CreateDataset"
-	DatasetsService_UploadDatasetByLink_FullMethodName = "/github.hse_experiments_platform.datasets.api.datasets.DatasetsService/UploadDatasetByLink"
-	DatasetsService_GetDatasets_FullMethodName         = "/github.hse_experiments_platform.datasets.api.datasets.DatasetsService/GetDatasets"
-	DatasetsService_GetDataset_FullMethodName          = "/github.hse_experiments_platform.datasets.api.datasets.DatasetsService/GetDataset"
-	DatasetsService_GetDatasetRows_FullMethodName      = "/github.hse_experiments_platform.datasets.api.datasets.DatasetsService/GetDatasetRows"
+	DatasetsService_CreateDataset_FullMethodName         = "/github.hse_experiments_platform.datasets.api.datasets.DatasetsService/CreateDataset"
+	DatasetsService_UploadDatasetByLink_FullMethodName   = "/github.hse_experiments_platform.datasets.api.datasets.DatasetsService/UploadDatasetByLink"
+	DatasetsService_GetDatasets_FullMethodName           = "/github.hse_experiments_platform.datasets.api.datasets.DatasetsService/GetDatasets"
+	DatasetsService_GetDataset_FullMethodName            = "/github.hse_experiments_platform.datasets.api.datasets.DatasetsService/GetDataset"
+	DatasetsService_GetDatasetRows_FullMethodName        = "/github.hse_experiments_platform.datasets.api.datasets.DatasetsService/GetDatasetRows"
+	DatasetsService_SetDatasetColumnTypes_FullMethodName = "/github.hse_experiments_platform.datasets.api.datasets.DatasetsService/SetDatasetColumnTypes"
 )
 
 // DatasetsServiceClient is the client API for DatasetsService service.
@@ -35,6 +36,7 @@ type DatasetsServiceClient interface {
 	GetDatasets(ctx context.Context, in *GetDatasetsRequest, opts ...grpc.CallOption) (*GetDatasetsResponse, error)
 	GetDataset(ctx context.Context, in *GetDatasetRequest, opts ...grpc.CallOption) (*GetDatasetResponse, error)
 	GetDatasetRows(ctx context.Context, in *GetDatasetRowsRequest, opts ...grpc.CallOption) (*GetDatasetRowsResponse, error)
+	SetDatasetColumnTypes(ctx context.Context, in *SetDatasetColumnTypesRequest, opts ...grpc.CallOption) (*SetDatasetColumnTypesResponse, error)
 }
 
 type datasetsServiceClient struct {
@@ -90,6 +92,15 @@ func (c *datasetsServiceClient) GetDatasetRows(ctx context.Context, in *GetDatas
 	return out, nil
 }
 
+func (c *datasetsServiceClient) SetDatasetColumnTypes(ctx context.Context, in *SetDatasetColumnTypesRequest, opts ...grpc.CallOption) (*SetDatasetColumnTypesResponse, error) {
+	out := new(SetDatasetColumnTypesResponse)
+	err := c.cc.Invoke(ctx, DatasetsService_SetDatasetColumnTypes_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DatasetsServiceServer is the server API for DatasetsService service.
 // All implementations should embed UnimplementedDatasetsServiceServer
 // for forward compatibility
@@ -99,6 +110,7 @@ type DatasetsServiceServer interface {
 	GetDatasets(context.Context, *GetDatasetsRequest) (*GetDatasetsResponse, error)
 	GetDataset(context.Context, *GetDatasetRequest) (*GetDatasetResponse, error)
 	GetDatasetRows(context.Context, *GetDatasetRowsRequest) (*GetDatasetRowsResponse, error)
+	SetDatasetColumnTypes(context.Context, *SetDatasetColumnTypesRequest) (*SetDatasetColumnTypesResponse, error)
 }
 
 // UnimplementedDatasetsServiceServer should be embedded to have forward compatible implementations.
@@ -119,6 +131,9 @@ func (UnimplementedDatasetsServiceServer) GetDataset(context.Context, *GetDatase
 }
 func (UnimplementedDatasetsServiceServer) GetDatasetRows(context.Context, *GetDatasetRowsRequest) (*GetDatasetRowsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDatasetRows not implemented")
+}
+func (UnimplementedDatasetsServiceServer) SetDatasetColumnTypes(context.Context, *SetDatasetColumnTypesRequest) (*SetDatasetColumnTypesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetDatasetColumnTypes not implemented")
 }
 
 // UnsafeDatasetsServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -222,6 +237,24 @@ func _DatasetsService_GetDatasetRows_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DatasetsService_SetDatasetColumnTypes_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetDatasetColumnTypesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DatasetsServiceServer).SetDatasetColumnTypes(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DatasetsService_SetDatasetColumnTypes_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DatasetsServiceServer).SetDatasetColumnTypes(ctx, req.(*SetDatasetColumnTypesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // DatasetsService_ServiceDesc is the grpc.ServiceDesc for DatasetsService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -248,6 +281,10 @@ var DatasetsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetDatasetRows",
 			Handler:    _DatasetsService_GetDatasetRows_Handler,
+		},
+		{
+			MethodName: "SetDatasetColumnTypes",
+			Handler:    _DatasetsService_SetDatasetColumnTypes_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/hse-experiments-platform/datasets/internal/pkg/domain/dataset"
+	"github.com/hse-experiments-platform/datasets/internal/pkg/models"
 	"github.com/hse-experiments-platform/datasets/internal/pkg/storage/db"
 	"github.com/hse-experiments-platform/datasets/internal/pkg/utils"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -85,7 +86,7 @@ func (d *datasetsService) uploadFromURL(ctx context.Context, addr string, datase
 
 		if err := d.commonDB.UpdateAfterUpload(ctx, db.UpdateAfterUploadParams{
 			ID:        datasetID,
-			Status:    db.DatasetStatusReady,
+			Status:    db.DatasetStatusWaitsConvertation,
 			Version:   "1.1",
 			RowsCount: c,
 		}); err != nil {
@@ -98,7 +99,7 @@ func (d *datasetsService) uploadFromURL(ctx context.Context, addr string, datase
 		for i, v := range builder.Schema {
 			params.Indexes = append(params.Indexes, int32(i))
 			params.ColumnNames = append(params.ColumnNames, v.Name)
-			params.ColumnTypes = append(params.ColumnTypes, dataset.TypeToString[v.Type])
+			params.ColumnTypes = append(params.ColumnTypes, models.TypeToString[v.Type])
 		}
 		if err := d.commonDB.SetDatasetSchema(ctx, params); err != nil {
 			log.Error().Err(err).Msg("d.commonDB.SetDatasetSchema")
@@ -124,7 +125,7 @@ func (d *datasetsService) setFailedUpload(ctx context.Context, datasetID int64, 
 	log.Error().Int64("datasetID", datasetID).Str("reason", reason).Msg("dataset upload attempt failed")
 	if err := d.commonDB.SetErrorStatus(ctx, db.SetErrorStatusParams{
 		ID:          datasetID,
-		Status:      db.DatasetStatusError,
+		Status:      db.DatasetStatusLoadingError,
 		UploadError: pgtype.Text{String: reason, Valid: true},
 	}); err != nil {
 		return fmt.Errorf("d.commonDB.SetStatus: %w", err)

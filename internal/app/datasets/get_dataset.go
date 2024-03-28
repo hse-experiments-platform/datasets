@@ -5,12 +5,20 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/hse-experiments-platform/datasets/internal/pkg/storage/db"
 	pb "github.com/hse-experiments-platform/datasets/pkg/datasets"
 	"github.com/jackc/pgx/v5"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
+
+var statusesWithoutSchema = map[db.DatasetStatus]bool{
+	db.DatasetStatusValue0:       true,
+	db.DatasetStatusInitializing: true,
+	db.DatasetStatusLoading:      true,
+	db.DatasetStatusLoadingError: true,
+}
 
 func (d *datasetsService) GetDataset(ctx context.Context, request *pb.GetDatasetRequest) (*pb.GetDatasetResponse, error) {
 	if request.GetDatasetID() == 0 {
@@ -33,7 +41,15 @@ func (d *datasetsService) GetDataset(ctx context.Context, request *pb.GetDataset
 		return nil, status.Error(codes.PermissionDenied, "cannot get other user's dataset")
 	}
 
-	return &pb.GetDatasetResponse{
+	columns, err := d.commonDB.GetDatasetSchema(ctx, request.GetDatasetID())
+	if err != nil {
+		return nil, fmt.Errorf("d.commonDB.GetDatasetSchema: %w", err)
+	}
+	if !statusesWithoutSchema[dataset.Status] && len(columns) == 0 {
+		return nil, status.Errorf(codes.Internal, "empty schema for dataset %v", dataset.ID)
+	}
+
+	resp := &pb.GetDatasetResponse{
 		Dataset: &pb.Dataset{
 			Id:          dataset.ID,
 			Name:        dataset.Name,
@@ -44,5 +60,17 @@ func (d *datasetsService) GetDataset(ctx context.Context, request *pb.GetDataset
 			UpdatedAt:   timestamppb.New(dataset.UpdatedAt.Time),
 			UploadError: dataset.UploadError.String,
 		},
-	}, nil
+		Schema: &pb.DatasetSchema{
+			Columns: make([]*pb.DatasetSchema_SchemaColumn, 0, len(columns)),
+		},
+	}
+
+	for _, c := range columns {
+		resp.Schema.Columns = append(resp.Schema.Columns, &pb.DatasetSchema_SchemaColumn{
+			Name: c.ColumnName,
+			Type: c.ColumnType,
+		})
+	}
+
+	return resp, nil
 }

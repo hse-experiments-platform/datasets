@@ -20,14 +20,14 @@
     "application/json"
   ],
   "paths": {
-    "/api/v1/dataset": {
+    "/api/v1/datasets": {
       "get": {
-        "operationId": "DatasetsService_GetDataset",
+        "operationId": "DatasetsService_GetDatasets",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/datasetsGetDatasetResponse"
+              "$ref": "#/definitions/datasetsGetDatasetsResponse"
             }
           },
           "default": {
@@ -39,11 +39,72 @@
         },
         "parameters": [
           {
-            "name": "datasetID",
+            "name": "limit",
             "in": "query",
             "required": false,
             "type": "string",
-            "format": "int64"
+            "format": "uint64"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "statuses.includeUnknown",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "statuses.includeInitializing",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "statuses.includeLoading",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "statuses.includeLoadingError",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "statuses.includeWaitsConvertation",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "statuses.includeConvertationInProgress",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "statuses.includeConvertationError",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "statuses.includeReady",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
           }
         ],
         "tags": [
@@ -91,7 +152,43 @@
         ]
       }
     },
-    "/api/v1/dataset/rows": {
+    "/api/v1/datasets/{datasetID}": {
+      "get": {
+        "operationId": "DatasetsService_GetDataset",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/datasetsGetDatasetResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "datasetID",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "DatasetsService"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/api/v1/datasets/{datasetID}/rows": {
       "get": {
         "operationId": "DatasetsService_GetDatasetRows",
         "responses": {
@@ -111,8 +208,8 @@
         "parameters": [
           {
             "name": "datasetID",
-            "in": "query",
-            "required": false,
+            "in": "path",
+            "required": true,
             "type": "string",
             "format": "int64"
           },
@@ -141,7 +238,51 @@
         ]
       }
     },
-    "/api/v1/dataset/upload/link": {
+    "/api/v1/datasets/{datasetID}/schema": {
+      "post": {
+        "operationId": "DatasetsService_SetDatasetColumnTypes",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/datasetsSetDatasetColumnTypesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "datasetID",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/DatasetsServiceSetDatasetColumnTypesBody"
+            }
+          }
+        ],
+        "tags": [
+          "DatasetsService"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
+    "/api/v1/datasets/{datasetID}/upload/link": {
       "post": {
         "operationId": "DatasetsService_UploadDatasetByLink",
         "responses": {
@@ -160,85 +301,19 @@
         },
         "parameters": [
           {
+            "name": "datasetID",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          },
+          {
             "name": "body",
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/datasetsUploadDatasetByLinkRequest"
+              "$ref": "#/definitions/DatasetsServiceUploadDatasetByLinkBody"
             }
-          }
-        ],
-        "tags": [
-          "DatasetsService"
-        ],
-        "security": [
-          {
-            "AccessToken": []
-          }
-        ]
-      }
-    },
-    "/api/v1/datasets": {
-      "get": {
-        "operationId": "DatasetsService_GetDatasets",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/datasetsGetDatasetsResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "uint64"
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "required": false,
-            "type": "string",
-            "format": "uint64"
-          },
-          {
-            "name": "query",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "statuses.includeInitializing",
-            "in": "query",
-            "required": false,
-            "type": "boolean"
-          },
-          {
-            "name": "statuses.includeLoading",
-            "in": "query",
-            "required": false,
-            "type": "boolean"
-          },
-          {
-            "name": "statuses.includeReady",
-            "in": "query",
-            "required": false,
-            "type": "boolean"
-          },
-          {
-            "name": "statuses.includeError",
-            "in": "query",
-            "required": false,
-            "type": "boolean"
           }
         ],
         "tags": [
@@ -263,6 +338,37 @@
           "type": "string"
         }
       }
+    },
+    "DatasetsServiceSetDatasetColumnTypesBody": {
+      "type": "object",
+      "properties": {
+        "columnTypes": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/datasetsColumnType"
+          }
+        }
+      }
+    },
+    "DatasetsServiceUploadDatasetByLinkBody": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string"
+        }
+      }
+    },
+    "datasetsColumnType": {
+      "type": "string",
+      "enum": [
+        "ColumnTypeNotSelected",
+        "ColumnTypeInteger",
+        "ColumnTypeFloat",
+        "ColumnTypeCategorial",
+        "ColumnTypeString",
+        "ColumnTypeDropped"
+      ],
+      "default": "ColumnTypeNotSelected"
     },
     "datasetsCreateDatasetRequest": {
       "type": "object",
@@ -345,24 +451,39 @@
         "Unknown",
         "Initializing",
         "Loading",
-        "Ready",
-        "Error"
+        "LoadingError",
+        "WaitsConvertation",
+        "ConvertationInProgress",
+        "ConvertationError",
+        "Ready"
       ],
       "default": "Unknown"
     },
     "datasetsDatasetStatusFilter": {
       "type": "object",
       "properties": {
+        "includeUnknown": {
+          "type": "boolean"
+        },
         "includeInitializing": {
           "type": "boolean"
         },
         "includeLoading": {
           "type": "boolean"
         },
-        "includeReady": {
+        "includeLoadingError": {
           "type": "boolean"
         },
-        "includeError": {
+        "includeWaitsConvertation": {
+          "type": "boolean"
+        },
+        "includeConvertationInProgress": {
+          "type": "boolean"
+        },
+        "includeConvertationError": {
+          "type": "boolean"
+        },
+        "includeReady": {
           "type": "boolean"
         }
       }
@@ -372,6 +493,9 @@
       "properties": {
         "dataset": {
           "$ref": "#/definitions/datasetsDataset"
+        },
+        "schema": {
+          "$ref": "#/definitions/datasetsDatasetSchema"
         }
       }
     },
@@ -384,9 +508,6 @@
             "type": "object",
             "$ref": "#/definitions/datasetsDatasetRow"
           }
-        },
-        "schema": {
-          "$ref": "#/definitions/datasetsDatasetSchema"
         },
         "pageInfo": {
           "$ref": "#/definitions/datasetsPageInfo"
@@ -425,6 +546,9 @@
         }
       }
     },
+    "datasetsSetDatasetColumnTypesResponse": {
+      "type": "object"
+    },
     "datasetsShortDatasetInfo": {
       "type": "object",
       "properties": {
@@ -440,18 +564,6 @@
         },
         "status": {
           "$ref": "#/definitions/datasetsDatasetStatus"
-        }
-      }
-    },
-    "datasetsUploadDatasetByLinkRequest": {
-      "type": "object",
-      "properties": {
-        "datasetID": {
-          "type": "string",
-          "format": "int64"
-        },
-        "url": {
-          "type": "string"
         }
       }
     },
