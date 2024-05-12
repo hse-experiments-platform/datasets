@@ -1,192 +1,125 @@
 package datasets
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"io"
-	"os"
-	"os/exec"
-	"strings"
-	"time"
 
-	"github.com/hse-experiments-platform/datasets/internal/pkg/domain/dataset"
+	"github.com/hse-experiments-platform/datasets/internal/pkg/domain/errors"
 	"github.com/hse-experiments-platform/datasets/internal/pkg/models"
-	"github.com/hse-experiments-platform/datasets/internal/pkg/storage/datasetsdb"
-	"github.com/hse-experiments-platform/datasets/internal/pkg/storage/db"
+	"github.com/hse-experiments-platform/datasets/internal/pkg/storage/common"
+	"github.com/hse-experiments-platform/launcher/pkg/launcher"
+	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog/log"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/status"
 )
 
-const (
-	DatasetConverterCMDPathKey = "DATASET_CONVERTER_CMD_PATH"
-	filePath                   = "./converted.csv"
-)
-
-func extractToken(ctx context.Context) (string, error) {
-	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		return "", status.Errorf(codes.Unauthenticated, "metadata is not provided")
-	}
-
-	values := md["authorization"]
-	if len(values) == 0 {
-		return "", status.Errorf(codes.Unauthenticated, "authorization token is not provided")
-	}
-
-	return strings.TrimPrefix(values[0], "Bearer "), nil
+type PreprocessRequest struct {
+	UserID    string      `json:"user_id"`
+	DatasetID string      `json:"dataset_id"`
+	Schema    [][2]string `json:"schema"`
 }
 
-func constructPythonListLiteral(params db.SetDatasetSchemaParams) string {
-	b := strings.Builder{}
-	b.WriteString("[")
-	for i, name := range params.ColumnNames {
-		b.WriteString("('")
-		b.WriteString(name)
-		b.WriteString("','")
-		b.WriteString(params.ColumnTypes[i])
-		b.WriteString("')")
-		if i != len(params.ColumnNames)-1 {
-			b.WriteRune(',')
-		}
-	}
-	b.WriteString("]")
-
-	// desired format
-	//[('abc','int'),('def','float'),('gfj','dropped')]
-	return b.String()
-}
-
-func (d *datasetsService) setColumnTypes(userCtx context.Context, params db.SetDatasetSchemaParams, rowsCount int64) error {
-	path := os.Getenv(DatasetConverterCMDPathKey)
-	if len(path) == 0 {
-		return fmt.Errorf("no converter path in environment")
-	}
+func (d *datasetsService) setColumnTypes(userCtx context.Context, datasetID, launchID int64, req common.SetDatasetSchemaParams) (err error) {
 	ctx := context.Background()
-	done := make(chan bool)
+	md, _ := metadata.FromIncomingContext(userCtx)
+	ctx = metadata.NewOutgoingContext(ctx, md)
 
-	token, err := extractToken(userCtx)
-	if err != nil {
-		return err
-	}
-
-	args := []string{path, fmt.Sprint(params.DatasetID), fmt.Sprint(rowsCount), constructPythonListLiteral(params),
-		token, filePath, "localhost:8084"}
-
-	cmd := exec.CommandContext(ctx, "python3", args...)
-
-	var out bytes.Buffer
-	cmd.Stdout = &out
-
-	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("cannot start datasest converter command: %w", err)
-	}
-
-	go func() {
-		var (
-			err         error
-			chunksCount int
-		)
-		defer func() {
-			if err != nil {
-				log.Error().Err(err).Msg("failed set column types")
-				d.onConvartationFail(ctx, params)
-			} else {
-				d.onConvertationSuccess(ctx, params, chunksCount)
-			}
-		}()
-
-		go func() {
-			select {
-			case <-time.NewTimer(time.Second * 60 * 5).C:
-				err = cmd.Cancel()
-				if err != nil {
-					log.Error().Err(err).Msg("cannot cancel dataset converter on timeout")
-				}
-
-				err = fmt.Errorf("command cancelled due to timeout")
-			case <-done:
-				return
-			}
-		}()
-
-		err = cmd.Wait()
-		done <- true
+	defer func() {
+		if err == nil {
+			err = d.onConvertationSuccess(ctx, req)
+		}
 		if err != nil {
-			log.Error().Err(err).Str("out", string(out.Bytes())).Msg("command finished with error")
-			return
+			d.onConvartationFail(ctx, req)
 		}
-
-		file, err := os.Open(filePath)
-		if err != nil {
-			err = fmt.Errorf("cannot open converted file: %w", err)
-			return
-		}
-		defer file.Close()
-
-		builder := dataset.NewBuilder(ctx, d.datasetsDB, params.DatasetID)
-		buffer := make([]byte, bufferSize)
-		for {
-			var n int
-			n, err = file.Read(buffer)
-			if err == io.EOF {
-				if err := builder.ProcessChunk(append(buffer[:n], '\n')); err != nil {
-					err = fmt.Errorf("builder.ProcessChunk: %w", err)
-					return
-				}
-				chunksCount++
-				err = nil
-				break
-			} else if err != nil {
-				err = fmt.Errorf("file.Read: %w", err)
-				return
-			}
-
-			err = builder.ProcessChunk(buffer[:n])
-			if err != nil {
-				err = fmt.Errorf("builder.ProcessChunk: %w", err)
-				return
-			}
-			chunksCount++
-		}
-
 	}()
+
+	if err = d.commonDB.SetStatus(ctx, common.SetStatusParams{
+		ID:     datasetID,
+		Status: common.DatasetStatusConvertationInProgress,
+	}); err != nil {
+		return fmt.Errorf("d.commonDB.SetStatus: %w", err)
+	}
+
+	if _, err = d.launcher.WaitForLaunchFinish(ctx, &launcher.WaitForLaunchFinishRequest{
+		LaunchID: launchID,
+	}); err != nil {
+		return fmt.Errorf("d.launcher.WaitForLaunchFinish: %w", err)
+	}
+
+	var resp *launcher.GetDatasetSetTypesLaunchResponse
+	resp, err = d.launcher.GetDatasetSetTypesLaunch(ctx, &launcher.GetDatasetSetTypesLaunchRequest{
+		LaunchID: launchID,
+	})
+	if err != nil {
+		return fmt.Errorf("d.launcher.GetDatasetSetTypesLaunch: %w", err)
+	} else if resp.LaunchInfo.Status != launcher.LaunchStatus_LaunchStatusSuccess || resp.Error != "" {
+		err = fmt.Errorf("launch failed: %s", resp.Error)
+		return errors.NewRevertable(err, resp.Error)
+	}
 
 	return nil
 }
 
-func (d *datasetsService) onConvertationSuccess(ctx context.Context, params db.SetDatasetSchemaParams, count int) {
-	err := d.datasetsDB.DeleteOldDatasetData(ctx, datasetsdb.DeleteOldDatasetDataParams{
-		DatasetID:   params.DatasetID,
-		ChunkNumber: int64(count),
-	})
+func (d *datasetsService) onConvertationSuccess(ctx context.Context, params common.SetDatasetSchemaParams) error {
+	rowsCount, err := d.getRowsCount(ctx, params.DatasetID)
 	if err != nil {
-		log.Error().Err(err).Msg("d.datasetsDB.DeleteOldDatasetData")
+		return fmt.Errorf("d.getRowsCount: %w", err)
 	}
 
-	err = d.commonDB.DropColumnsByType(ctx, db.DropColumnsByTypeParams{
-		DatasetID:  params.DatasetID,
-		ColumnType: models.TypeToString[models.ColumnTypeDropped],
-	})
-	if err != nil {
-		log.Error().Err(err).Msg("d.commonDB.DropColumnsByType")
+	if err := pgx.BeginTxFunc(ctx, d.commonDBConn, pgx.TxOptions{
+		AccessMode: pgx.ReadWrite,
+	}, func(tx pgx.Tx) (err error) {
+		defer func() {
+			if err != nil {
+				errTx := tx.Rollback(ctx)
+				if errTx != nil {
+					log.Error().Err(errTx).Err(err).Msg("tx.Rollback error")
+				}
+			}
+		}()
+
+		txdb := d.commonDB.WithTx(tx)
+
+		// обновляем количество строк
+		if err = txdb.SetRowsCount(ctx, common.SetRowsCountParams{
+			ID:        params.DatasetID,
+			RowsCount: rowsCount,
+		}); err != nil {
+			return fmt.Errorf("txdb.SetRowsCount: %w", err)
+		}
+
+		// обновляем на новую схему
+		if err = txdb.SetDatasetSchema(ctx, params); err != nil {
+			return fmt.Errorf("txdb.SetDatasetSchema: %w", err)
+		}
+
+		// удаляем все дропаемые колонки
+		if err = txdb.DropColumnsByType(ctx, common.DropColumnsByTypeParams{
+			DatasetID:  params.DatasetID,
+			ColumnType: models.TypeToString[models.ColumnTypeDropped],
+		}); err != nil {
+			return fmt.Errorf("txdb.DropColumnsByType: %w", err)
+		}
+
+		if err = txdb.SetStatus(ctx, common.SetStatusParams{
+			ID:     params.DatasetID,
+			Status: common.DatasetStatusReady,
+		}); err != nil {
+			return fmt.Errorf("txdb.SetStatus: %w", err)
+		}
+
+		return nil
+	}); err != nil {
+		return fmt.Errorf("pgx.BeginTxFunc: %w", err)
 	}
 
-	err = d.commonDB.SetStatus(ctx, db.SetStatusParams{
-		ID:     params.DatasetID,
-		Status: db.DatasetStatusReady,
-	})
-	if err != nil {
-		log.Error().Err(err).Msg("d.commonDB.SetStatus")
-	}
+	return nil
 }
 
-func (d *datasetsService) onConvartationFail(ctx context.Context, params db.SetDatasetSchemaParams) {
-	err := d.commonDB.SetStatus(ctx, db.SetStatusParams{
+func (d *datasetsService) onConvartationFail(ctx context.Context, params common.SetDatasetSchemaParams) {
+	err := d.commonDB.SetStatus(ctx, common.SetStatusParams{
 		ID:     params.DatasetID,
-		Status: db.DatasetStatusConvertationError,
+		Status: common.DatasetStatusConvertationError,
 	})
 	if err != nil {
 		log.Error().Err(err).Msg("d.commonDB.SetStatus")

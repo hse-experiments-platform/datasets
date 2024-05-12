@@ -3,7 +3,7 @@
 //   sqlc v1.25.0
 // source: query.sql
 
-package db
+package common
 
 import (
 	"context"
@@ -43,6 +43,17 @@ type DropColumnsByTypeParams struct {
 
 func (q *Queries) DropColumnsByType(ctx context.Context, arg DropColumnsByTypeParams) error {
 	_, err := q.db.Exec(ctx, dropColumnsByType, arg.DatasetID, arg.ColumnType)
+	return err
+}
+
+const dropDatasetSchema = `-- name: DropDatasetSchema :exec
+delete
+from dataset_schemas
+where dataset_id = $1
+`
+
+func (q *Queries) DropDatasetSchema(ctx context.Context, datasetID int64) error {
+	_, err := q.db.Exec(ctx, dropDatasetSchema, datasetID)
 	return err
 }
 
@@ -256,6 +267,22 @@ func (q *Queries) SetErrorStatus(ctx context.Context, arg SetErrorStatusParams) 
 	return err
 }
 
+const setRowsCount = `-- name: SetRowsCount :exec
+update datasets
+set rows_count = $2
+where id = $1
+`
+
+type SetRowsCountParams struct {
+	ID        int64
+	RowsCount int64
+}
+
+func (q *Queries) SetRowsCount(ctx context.Context, arg SetRowsCountParams) error {
+	_, err := q.db.Exec(ctx, setRowsCount, arg.ID, arg.RowsCount)
+	return err
+}
+
 const setStatus = `-- name: SetStatus :exec
 update datasets
 set status     = $2,
@@ -275,10 +302,10 @@ func (q *Queries) SetStatus(ctx context.Context, arg SetStatusParams) error {
 
 const updateAfterUpload = `-- name: UpdateAfterUpload :exec
 update datasets
-set status     = $2,
-    version    = $3,
-    rows_count = $4,
-    updated_at = now(),
+set status       = $2,
+    version      = $3,
+    rows_count   = $4,
+    updated_at   = now(),
     upload_error = ''
 where id = $1
 `

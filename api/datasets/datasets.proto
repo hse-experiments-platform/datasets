@@ -87,6 +87,15 @@ service DatasetsService {
       security: {security_requirement: {key: "AccessToken";value: {}}}
     };
   }
+
+  rpc GetDatasetDownloadLink (GetDatasetDownloadLinkRequest) returns (GetDatasetDownloadLinkResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/datasets/{datasetID}/download"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {security_requirement: {key: "AccessToken";value: {}}}
+    };
+  }
 }
 
 message CreateDatasetRequest {
@@ -197,6 +206,7 @@ message GetDatasetRowsResponse {
   PageInfo pageInfo = 3;
 }
 
+
 enum ColumnType {
   ColumnTypeUndefined = 0;
   ColumnTypeInteger = 1;
@@ -206,10 +216,42 @@ enum ColumnType {
   ColumnTypeDropped = 5;
 }
 
+enum FillingTechnique {
+  FillingTechniqueUndefined = 0;
+  FillingTechniqueConstant = 1;
+  FillingTechniqueTypeDefault = 2;
+  FillingTechniqueAggregateFunction = 3;
+  FillingTechniqueDeleteRow = 4;
+}
+
+enum AggregateFunction {
+  AggregateFunctionUndefined = 0;
+  AggregateFunctionMean = 1;
+  AggregateFunctionMedian = 2;
+  AggregateFunctionMin = 3;
+  AggregateFunctionMax = 4;
+  AggregateFunctionMostFrequent = 5;
+}
+
+message SetTypeSettings {
+  ColumnType type = 1;
+  FillingTechnique fillingTechnique = 2;
+  AggregateFunction aggregateFunction = 3;
+  string fillingValue = 4;
+}
+
 message SetDatasetColumnTypesRequest {
   int64 datasetID = 1;
-  map<string, ColumnType> columnTypes = 2;
+  map<string, SetTypeSettings> columnTypes = 2;
 }
 
 message SetDatasetColumnTypesResponse {
+}
+
+message GetDatasetDownloadLinkRequest {
+  int64 datasetID = 1;
+}
+
+message GetDatasetDownloadLinkResponse {
+  string url = 1;
 }

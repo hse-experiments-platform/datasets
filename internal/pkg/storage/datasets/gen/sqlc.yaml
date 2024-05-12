@@ -2,12 +2,12 @@ version: "2"
 sql:
   - engine: "postgresql"
     queries: "query.sql"
-    schema: "../../../../../../auth/migrations"
+    schema: "../../../../../migrations"
     database:
-      uri: postgresql://hseuser:P@ssw0rd@localhost:6432/hsedb
+      uri: postgresql://hseuser:P@ssw0rd@localhost:6433/datasetsdb
     gen:
       go:
-        package: "db"
+        package: "datasets"
         out: "../"
         sql_package: "pgx/v5"
         emit_interface: true

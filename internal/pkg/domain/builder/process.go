@@ -1,36 +1,16 @@
-package dataset
+package builder
 
 import (
 	"bytes"
-	"context"
 	"encoding/csv"
 	"errors"
 	"fmt"
 	"io"
 
 	"github.com/hse-experiments-platform/datasets/internal/pkg/models"
-	"github.com/hse-experiments-platform/datasets/internal/pkg/storage/datasetsdb"
+	"github.com/hse-experiments-platform/datasets/internal/pkg/storage/datasets"
 	"github.com/rs/zerolog/log"
 )
-
-type Builder struct {
-	DatasetsDB datasetsdb.Querier
-	DatasetID  int64
-	Schema     models.Schema
-	Ctx        context.Context
-
-	prevRowPrefix []byte
-	curRow        int64
-	chunkNumber   int64
-}
-
-func NewBuilder(ctx context.Context, db datasetsdb.Querier, datasetID int64) *Builder {
-	return &Builder{
-		DatasetsDB: db,
-		DatasetID:  datasetID,
-		Ctx:        ctx,
-	}
-}
 
 func (b *Builder) initSchema(columns []string) {
 	for _, c := range columns {
@@ -68,7 +48,7 @@ func (b *Builder) ProcessChunk(data []byte) error {
 			b.prevRowPrefix = parsingData[prevOffset:]
 			break
 		} else if err != nil {
-			log.Error().Str("data", string(data)).Err(err).Msg("cannot read csv row")
+			log.Error().Str("data", string(data[:1000])).Err(err).Msg("cannot read csv row")
 			return err
 		}
 
@@ -91,10 +71,10 @@ func (b *Builder) ProcessChunk(data []byte) error {
 	}
 
 	//log.Debug().Msg("got chunk to write in db")
-	if err := b.DatasetsDB.UploadDatasetChunk(b.Ctx, datasetsdb.UploadDatasetChunkParams{
+	if err := b.DatasetsDB.UploadDatasetChunk(b.Ctx, datasets.UploadDatasetChunkParams{
 		DatasetID:    b.DatasetID,
 		ChunkNumber:  b.chunkNumber,
-		RawDataChunk: data,
+		ChunkLen:     int32(len(data)),
 		MinRowNumber: firstRow,
 		MaxRowNumber: lastChunkRow,
 		PrefixLen:    int32(prefixLen),

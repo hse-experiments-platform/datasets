@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/hse-experiments-platform/datasets/internal/pkg/storage/db"
+	"github.com/hse-experiments-platform/datasets/internal/pkg/storage/common"
 	pb "github.com/hse-experiments-platform/datasets/pkg/datasets"
 	"github.com/jackc/pgx/v5"
 	"google.golang.org/grpc/codes"
@@ -13,11 +13,11 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-var statusesWithoutSchema = map[db.DatasetStatus]bool{
-	db.DatasetStatusValue0:       true,
-	db.DatasetStatusInitializing: true,
-	db.DatasetStatusLoading:      true,
-	db.DatasetStatusLoadingError: true,
+var statusesWithoutSchema = map[common.DatasetStatus]bool{
+	common.DatasetStatusValue0:       true,
+	common.DatasetStatusInitializing: true,
+	common.DatasetStatusLoading:      true,
+	common.DatasetStatusLoadingError: true,
 }
 
 func (d *datasetsService) GetDataset(ctx context.Context, request *pb.GetDatasetRequest) (*pb.GetDatasetResponse, error) {

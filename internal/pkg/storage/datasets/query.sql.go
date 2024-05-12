@@ -3,10 +3,12 @@
 //   sqlc v1.25.0
 // source: query.sql
 
-package datasetsdb
+package datasets
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const deleteDatasetData = `-- name: DeleteDatasetData :exec
@@ -23,7 +25,8 @@ func (q *Queries) DeleteDatasetData(ctx context.Context, datasetID int64) error 
 const deleteOldDatasetData = `-- name: DeleteOldDatasetData :exec
 DELETE
 from datasets_data
-where dataset_id = $1 and chunk_number >= $2
+where dataset_id = $1
+  and chunk_number >= $2
 `
 
 type DeleteOldDatasetDataParams struct {
@@ -36,60 +39,39 @@ func (q *Queries) DeleteOldDatasetData(ctx context.Context, arg DeleteOldDataset
 	return err
 }
 
-const getDatasetChunkBorders = `-- name: GetDatasetChunkBorders :one
-SELECT array_agg(min_row_number) as min_row_number, array_agg(max_row_number) as max_row_number
+const getDatasetChunkBorders = `-- name: GetDatasetChunkBorders :many
+SELECT min_row_number                                                                  as min_row_number,
+       max_row_number                                                                  as max_row_number,
+       chunk_len                                                                       as chunk_len,
+       prefix_len                                                                      as prefix_len,
+       coalesce(sum(chunk_len) over (rows unbounded preceding EXCLUDE CURRENT ROW), 0::bigint) as "offset"
 from datasets_data
 WHERE dataset_id = $1
-GROUP BY dataset_id
 `
 
 type GetDatasetChunkBordersRow struct {
-	MinRowNumber []int64
-	MaxRowNumber []int64
-}
-
-func (q *Queries) GetDatasetChunkBorders(ctx context.Context, datasetID int64) (GetDatasetChunkBordersRow, error) {
-	row := q.db.QueryRow(ctx, getDatasetChunkBorders, datasetID)
-	var i GetDatasetChunkBordersRow
-	err := row.Scan(&i.MinRowNumber, &i.MaxRowNumber)
-	return i, err
-}
-
-const getDatasetChunks = `-- name: GetDatasetChunks :many
-select raw_data_chunk, min_row_number, max_row_number, prefix_len
-from datasets_data
-where dataset_id = $1
-  and $2 <= chunk_number
-  and chunk_number < $3
-`
-
-type GetDatasetChunksParams struct {
-	DatasetID int64
-	L         int64
-	R         int64
-}
-
-type GetDatasetChunksRow struct {
-	RawDataChunk []byte
 	MinRowNumber int64
 	MaxRowNumber int64
+	ChunkLen     int32
 	PrefixLen    int32
+	Offset       pgtype.Int8
 }
 
-func (q *Queries) GetDatasetChunks(ctx context.Context, arg GetDatasetChunksParams) ([]GetDatasetChunksRow, error) {
-	rows, err := q.db.Query(ctx, getDatasetChunks, arg.DatasetID, arg.L, arg.R)
+func (q *Queries) GetDatasetChunkBorders(ctx context.Context, datasetID int64) ([]GetDatasetChunkBordersRow, error) {
+	rows, err := q.db.Query(ctx, getDatasetChunkBorders, datasetID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetDatasetChunksRow
+	var items []GetDatasetChunkBordersRow
 	for rows.Next() {
-		var i GetDatasetChunksRow
+		var i GetDatasetChunkBordersRow
 		if err := rows.Scan(
-			&i.RawDataChunk,
 			&i.MinRowNumber,
 			&i.MaxRowNumber,
+			&i.ChunkLen,
 			&i.PrefixLen,
+			&i.Offset,
 		); err != nil {
 			return nil, err
 		}
@@ -102,32 +84,32 @@ func (q *Queries) GetDatasetChunks(ctx context.Context, arg GetDatasetChunksPara
 }
 
 const uploadDatasetChunk = `-- name: UploadDatasetChunk :exec
-INSERT into datasets_data (dataset_id, raw_data_chunk, min_row_number, max_row_number, chunk_number, prefix_len)
+INSERT into datasets_data (dataset_id, min_row_number, max_row_number, chunk_number, prefix_len, chunk_len)
 VALUES ($1, $2, $3, $4, $5, $6)
 on conflict (dataset_id, chunk_number) do update
-    set raw_data_chunk = excluded.raw_data_chunk,
-        min_row_number = excluded.min_row_number,
+    set min_row_number = excluded.min_row_number,
         max_row_number = excluded.max_row_number,
-        prefix_len     = excluded.prefix_len
+        prefix_len     = excluded.prefix_len,
+        chunk_len      =excluded.chunk_len
 `
 
 type UploadDatasetChunkParams struct {
 	DatasetID    int64
-	RawDataChunk []byte
 	MinRowNumber int64
 	MaxRowNumber int64
 	ChunkNumber  int64
 	PrefixLen    int32
+	ChunkLen     int32
 }
 
 func (q *Queries) UploadDatasetChunk(ctx context.Context, arg UploadDatasetChunkParams) error {
 	_, err := q.db.Exec(ctx, uploadDatasetChunk,
 		arg.DatasetID,
-		arg.RawDataChunk,
 		arg.MinRowNumber,
 		arg.MaxRowNumber,
 		arg.ChunkNumber,
 		arg.PrefixLen,
+		arg.ChunkLen,
 	)
 	return err
 }

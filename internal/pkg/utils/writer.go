@@ -10,22 +10,27 @@ type ChunkedFunctionCaller interface {
 }
 
 type chunkedFunctionCaller struct {
-	f         func(data []byte) error
+	funcs     []func(data []byte) error
 	chunk     []byte
 	chunkSize int
 }
 
-func NewChunkedFunctionCaller(f func(data []byte) error, chunkSize int) ChunkedFunctionCaller {
+func NewChunkedFunctionCaller(funcs []func(data []byte) error, chunkSize int) ChunkedFunctionCaller {
 	return &chunkedFunctionCaller{
-		f:         f,
+		funcs:     funcs,
 		chunk:     make([]byte, 0, chunkSize),
 		chunkSize: chunkSize,
 	}
 }
 
 func (m *chunkedFunctionCaller) do(data []byte) error {
-	//log.Debug().Any("data_len", len(data)).Msg("writing to func")
-	return m.f(data)
+	for _, f := range m.funcs {
+		if err := f(data); err != nil {
+			return fmt.Errorf("f(data): %w", err)
+		}
+	}
+
+	return nil
 }
 
 func (m *chunkedFunctionCaller) Write(data []byte) (int, error) {
@@ -50,8 +55,10 @@ func (m *chunkedFunctionCaller) Write(data []byte) (int, error) {
 
 func (m *chunkedFunctionCaller) Flush() error {
 	m.chunk = append(m.chunk, '\n')
-	if err := m.f(m.chunk); err != nil {
-		return fmt.Errorf("error in function: %w", err)
+	for _, f := range m.funcs {
+		if err := f(m.chunk); err != nil {
+			return fmt.Errorf("f(m.chunk): %w", err)
+		}
 	}
 
 	m.chunk = nil

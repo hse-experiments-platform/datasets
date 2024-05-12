@@ -5,10 +5,10 @@ returning id;
 
 -- name: UpdateAfterUpload :exec
 update datasets
-set status     = $2,
-    version    = $3,
-    rows_count = $4,
-    updated_at = now(),
+set status       = $2,
+    version      = $3,
+    rows_count   = $4,
+    updated_at   = now(),
     upload_error = ''
 where id = $1;
 
@@ -90,3 +90,13 @@ delete
 from dataset_schemas
 where dataset_id = $1
   and column_type = $2;
+
+-- name: DropDatasetSchema :exec
+delete
+from dataset_schemas
+where dataset_id = $1;
+
+-- name: SetRowsCount :exec
+update datasets
+set rows_count = $2
+where id = $1;

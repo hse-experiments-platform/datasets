@@ -11,7 +11,9 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/hse-experiments-platform/datasets/internal/app/datasets"
+	"github.com/hse-experiments-platform/datasets/internal/pkg/storage/chunks/impl/s3"
 	pb "github.com/hse-experiments-platform/datasets/pkg/datasets"
+	launcherpb "github.com/hse-experiments-platform/launcher/pkg/launcher"
 	osinit "github.com/hse-experiments-platform/library/pkg/utils/init"
 	"github.com/hse-experiments-platform/library/pkg/utils/loggers"
 	"github.com/hse-experiments-platform/library/pkg/utils/token"
@@ -22,6 +24,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
@@ -33,6 +37,22 @@ func loadEnv() {
 	if err := godotenv.Load(file); err != nil {
 		log.Error().Err(err).Msg("cannot load env variables")
 	}
+}
+
+func initMinio() *minio.Client {
+	endpoint := osinit.MustLoadEnv("MINIO_ADDR")
+	accessKeyID := osinit.MustLoadEnv("MINIO_USER")
+	secretAccessKey := osinit.MustLoadEnv("MINIO_PASSWORD")
+
+	// Initialize minio client object.
+	minioClient, err := minio.New(endpoint, &minio.Options{
+		Creds: credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
+	})
+	if err != nil {
+		log.Fatal().Err(err).Msg("cannot init minio client")
+	}
+
+	return minioClient
 }
 
 func initDB(ctx context.Context, dsnOSKey string, loadTypes ...string) *pgxpool.Pool {
@@ -71,10 +91,21 @@ func initDB(ctx context.Context, dsnOSKey string, loadTypes ...string) *pgxpool.
 	return pool
 }
 
+func initLauncher() launcherpb.LauncherServiceClient {
+	conn, err := grpc.Dial(osinit.MustLoadEnv("LAUNCHER_ADDR"), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatal().Err(err).Msg("cannot init launcher conn")
+	}
+
+	return launcherpb.NewLauncherServiceClient(conn)
+}
+
 func initService(ctx context.Context, maker token.Maker) pb.DatasetsServiceServer {
 	service := datasets.NewService(
 		initDB(ctx, "DB_CONNECT_STRING", "dataset_status"),
 		initDB(ctx, "DATASETS_DB_CONNECT_STRING"),
+		s3.NewMinioStorage(initMinio()),
+		initLauncher(),
 		maker,
 	)
 

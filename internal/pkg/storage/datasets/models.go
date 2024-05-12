@@ -2,15 +2,21 @@
 // versions:
 //   sqlc v1.25.0
 
-package datasetsdb
+package datasets
 
 import ()
+
+type DatasetsDataChunk struct {
+	DatasetID    int64
+	ChunkNumber  int64
+	RawDataChunk []byte
+}
 
 type DatasetsDatum struct {
 	ChunkNumber  int64
 	DatasetID    int64
-	RawDataChunk []byte
 	MinRowNumber int64
 	MaxRowNumber int64
 	PrefixLen    int32
+	ChunkLen     int32
 }

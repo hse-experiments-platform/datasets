@@ -4,16 +4,16 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hse-experiments-platform/datasets/internal/pkg/storage/db"
+	"github.com/hse-experiments-platform/datasets/internal/pkg/storage/common"
 	pb "github.com/hse-experiments-platform/datasets/pkg/datasets"
 	"github.com/jackc/pgx/v5"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-var availableStatuses = map[db.DatasetStatus]bool{
-	db.DatasetStatusInitializing: true,
-	db.DatasetStatusLoadingError: true,
+var availableStatuses = map[common.DatasetStatus]bool{
+	common.DatasetStatusInitializing: true,
+	common.DatasetStatusLoadingError: true,
 }
 
 func (d *datasetsService) prepareForUploadFunc(ctx context.Context, datasetID int64) func(tx pgx.Tx) error {
@@ -28,9 +28,9 @@ func (d *datasetsService) prepareForUploadFunc(ctx context.Context, datasetID in
 			return status.Errorf(codes.InvalidArgument, "invalid dataset status to upload: expected initializing/error, got: %v", st)
 		}
 
-		if err := txDB.SetStatus(ctx, db.SetStatusParams{
+		if err := txDB.SetStatus(ctx, common.SetStatusParams{
 			ID:     datasetID,
-			Status: db.DatasetStatusLoading,
+			Status: common.DatasetStatusLoading,
 		}); err != nil {
 			return fmt.Errorf("txDB.SetStatus: %w", err)
 		}
@@ -46,6 +46,11 @@ func (d *datasetsService) UploadDatasetByLink(ctx context.Context, request *pb.U
 		return nil, status.Error(codes.InvalidArgument, "url must be not empty")
 	}
 
+	userID, err := getUserID(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	if err := d.checkDatasetAccess(ctx, request.GetDatasetID()); err != nil {
 		return nil, err
 	}
@@ -57,7 +62,7 @@ func (d *datasetsService) UploadDatasetByLink(ctx context.Context, request *pb.U
 		return nil, fmt.Errorf("pgx.BeginTxFunc: %w", err)
 	}
 
-	if err := d.uploadFromURL(context.Background(), request.GetUrl(), request.GetDatasetID()); err != nil {
+	if err := d.uploadWithLauncher(ctx, request.GetUrl(), userID, request.GetDatasetID()); err != nil {
 		return nil, fmt.Errorf("d.uploadFromURL: %w", err)
 	}
 

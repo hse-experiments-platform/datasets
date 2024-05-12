@@ -1,16 +1,14 @@
 package datasets
 
 import (
-	"context"
-
-	"github.com/hse-experiments-platform/datasets/internal/pkg/storage/datasetsdb"
-	"github.com/hse-experiments-platform/datasets/internal/pkg/storage/db"
+	"github.com/hse-experiments-platform/datasets/internal/pkg/storage/chunks/impl/s3"
+	"github.com/hse-experiments-platform/datasets/internal/pkg/storage/common"
+	db2 "github.com/hse-experiments-platform/datasets/internal/pkg/storage/datasets"
 	pb "github.com/hse-experiments-platform/datasets/pkg/datasets"
+	launcherpb "github.com/hse-experiments-platform/launcher/pkg/launcher"
+	osinit "github.com/hse-experiments-platform/library/pkg/utils/init"
 	"github.com/hse-experiments-platform/library/pkg/utils/token"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/rs/zerolog/log"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 var _ pb.DatasetsServiceServer = (*datasetsService)(nil)
@@ -20,29 +18,33 @@ type datasetsService struct {
 	datasetsDBConn *pgxpool.Pool
 	commonDBConn   *pgxpool.Pool
 	maker          token.Maker
+	minio          *s3.MinioStorage
 
-	commonDB   *db.Queries
-	datasetsDB *datasetsdb.Queries
+	commonDB    *common.Queries
+	datasetsDB  *db2.Queries
+	storageType StorageType
+	launcher    launcherpb.LauncherServiceClient
 }
 
-func NewService(commonDBConn, datasetsDBConn *pgxpool.Pool, maker token.Maker) *datasetsService {
+type StorageType string
+
+const (
+	StorageTypePG    = "postgres"
+	StorageTypeMinio = "minio"
+)
+
+func NewService(commonDBConn, datasetsDBConn *pgxpool.Pool, minio *s3.MinioStorage, launcher launcherpb.LauncherServiceClient, maker token.Maker) *datasetsService {
+	var storageType = StorageType(osinit.MustLoadEnv("DATASETS_STORAGE"))
+
 	return &datasetsService{
 		commonDBConn:   commonDBConn,
 		datasetsDBConn: datasetsDBConn,
 		maker:          maker,
+		minio:          minio,
+		storageType:    storageType,
+		launcher:       launcher,
 
-		commonDB:   db.New(commonDBConn),
-		datasetsDB: datasetsdb.New(datasetsDBConn),
+		commonDB:   common.New(commonDBConn),
+		datasetsDB: db2.New(datasetsDBConn),
 	}
-}
-
-func getUserID(ctx context.Context) (int64, error) {
-	var userID int64
-	userID, ok := ctx.Value(token.UserIDContextKey).(int64)
-	if !ok {
-		log.Error().Msgf("invalid userID context key type: %T", ctx.Value(token.UserIDContextKey))
-		return 0, status.New(codes.Internal, "internal error").Err()
-	}
-
-	return userID, nil
 }

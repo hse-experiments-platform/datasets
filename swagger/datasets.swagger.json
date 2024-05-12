@@ -188,6 +188,42 @@
         ]
       }
     },
+    "/api/v1/datasets/{datasetID}/download": {
+      "get": {
+        "operationId": "DatasetsService_GetDatasetDownloadLink",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/datasetsGetDatasetDownloadLinkResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "datasetID",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          }
+        ],
+        "tags": [
+          "DatasetsService"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
     "/api/v1/datasets/{datasetID}/rows": {
       "get": {
         "operationId": "DatasetsService_GetDatasetRows",
@@ -345,7 +381,7 @@
         "columnTypes": {
           "type": "object",
           "additionalProperties": {
-            "$ref": "#/definitions/datasetsColumnType"
+            "$ref": "#/definitions/datasetsSetTypeSettings"
           }
         }
       }
@@ -357,6 +393,18 @@
           "type": "string"
         }
       }
+    },
+    "datasetsAggregateFunction": {
+      "type": "string",
+      "enum": [
+        "AggregateFunctionUndefined",
+        "AggregateFunctionMean",
+        "AggregateFunctionMedian",
+        "AggregateFunctionMin",
+        "AggregateFunctionMax",
+        "AggregateFunctionMostFrequent"
+      ],
+      "default": "AggregateFunctionUndefined"
     },
     "datasetsColumnType": {
       "type": "string",
@@ -488,6 +536,25 @@
         }
       }
     },
+    "datasetsFillingTechnique": {
+      "type": "string",
+      "enum": [
+        "FillingTechniqueUndefined",
+        "FillingTechniqueConstant",
+        "FillingTechniqueTypeDefault",
+        "FillingTechniqueAggregateFunction",
+        "FillingTechniqueDeleteRow"
+      ],
+      "default": "FillingTechniqueUndefined"
+    },
+    "datasetsGetDatasetDownloadLinkResponse": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string"
+        }
+      }
+    },
     "datasetsGetDatasetResponse": {
       "type": "object",
       "properties": {
@@ -548,6 +615,23 @@
     },
     "datasetsSetDatasetColumnTypesResponse": {
       "type": "object"
+    },
+    "datasetsSetTypeSettings": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "$ref": "#/definitions/datasetsColumnType"
+        },
+        "fillingTechnique": {
+          "$ref": "#/definitions/datasetsFillingTechnique"
+        },
+        "aggregateFunction": {
+          "$ref": "#/definitions/datasetsAggregateFunction"
+        },
+        "fillingValue": {
+          "type": "string"
+        }
+      }
     },
     "datasetsShortDatasetInfo": {
       "type": "object",
