@@ -212,7 +212,7 @@ enum ColumnType {
   ColumnTypeInteger = 1;
   ColumnTypeFloat = 2;
   ColumnTypeCategorial = 3;
-  ColumnTypeDropped = 5;
+  ColumnTypeDropped = 4;
 }
 
 enum FillingTechnique {
