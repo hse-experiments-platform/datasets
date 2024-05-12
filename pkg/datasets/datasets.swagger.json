@@ -413,7 +413,6 @@
         "ColumnTypeInteger",
         "ColumnTypeFloat",
         "ColumnTypeCategorial",
-        "ColumnTypeString",
         "ColumnTypeDropped"
       ],
       "default": "ColumnTypeUndefined"

@@ -34,8 +34,6 @@ func convertColumnTypePB(t pb.ColumnType) models.ColumnType {
 	switch t {
 	case pb.ColumnType_ColumnTypeUndefined:
 		return models.ColumnTypeUndefined
-	case pb.ColumnType_ColumnTypeString:
-		return models.ColumnTypeString
 	case pb.ColumnType_ColumnTypeInteger:
 		return models.ColumnTypeInteger
 	case pb.ColumnType_ColumnTypeFloat:
@@ -81,8 +79,6 @@ func convertColumnType(t pb.ColumnType) launcherpb.ColumnType {
 		return launcherpb.ColumnType_ColumnTypeFloat
 	case pb.ColumnType_ColumnTypeCategorial:
 		return launcherpb.ColumnType_ColumnTypeCategorial
-	case pb.ColumnType_ColumnTypeString:
-		return launcherpb.ColumnType_ColumnTypeString
 	case pb.ColumnType_ColumnTypeDropped:
 		return launcherpb.ColumnType_ColumnTypeDropped
 	default:
