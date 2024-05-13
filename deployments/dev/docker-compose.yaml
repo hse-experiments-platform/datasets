@@ -71,6 +71,8 @@ services:
       timeout: 10s
       retries: 5
     command: server /data --console-address ":9001"
+    networks:
+      - auth_hse-net
 
 volumes:
   db-data:
