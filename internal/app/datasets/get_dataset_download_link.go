@@ -30,6 +30,7 @@ func (d *datasetsService) GetDatasetDownloadLink(ctx context.Context, request *p
 	url.Host = os.Getenv("HOST")
 
 	return &pb.GetDatasetDownloadLinkResponse{
-		Url: url.String(),
+		Url:    url.String(),
+		UserID: userID,
 	}, nil
 }

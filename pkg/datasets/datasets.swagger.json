@@ -551,6 +551,10 @@
       "properties": {
         "url": {
           "type": "string"
+        },
+        "userID": {
+          "type": "string",
+          "format": "int64"
         }
       }
     },
