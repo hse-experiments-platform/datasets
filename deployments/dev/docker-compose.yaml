@@ -17,6 +17,7 @@ services:
       - DATASETS_DB_CONNECT_STRING=postgresql://hseuser:P@ssw0rd@datasetsdb:5432/datasetsdb
       - MINIO_ADDR=minio:9000
       - LAUNCHER_ADDR=launcher:8087
+      - HOST=tcarzverey.ru:9000
     ports:
       - "8083:8083"
       - "8084:8084"

@@ -3,6 +3,7 @@ package datasets
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/hse-experiments-platform/datasets/internal/pkg/domain"
 	pb "github.com/hse-experiments-platform/datasets/pkg/datasets"
@@ -25,6 +26,8 @@ func (d *datasetsService) GetDatasetDownloadLink(ctx context.Context, request *p
 	if err != nil {
 		return nil, fmt.Errorf("d.minio.GetObjectDownloadLink: %w", err)
 	}
+
+	url.Host = os.Getenv("HOST")
 
 	return &pb.GetDatasetDownloadLinkResponse{
 		Url: url.String(),
