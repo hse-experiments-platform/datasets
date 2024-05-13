@@ -87,7 +87,9 @@ func (d *datasetsService) processLaunch(ctx context.Context, launchID, datasetID
 			}
 
 			log.Debug().Msg("upload completed successfully")
-			return
+			if err == nil {
+				return
+			}
 		}
 		// если дошли до сюда, значит у нас в какой то момент возникла ошибка, откатываем
 		log.Error().Err(err).Msg("error in upload")
