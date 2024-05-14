@@ -62,8 +62,8 @@ services:
       # MinIO Console is available at http://localhost:9001
       - "9001:9001"
     environment:
-      MINIO_ROOT_USER: "hse_minio_user"
-      MINIO_ROOT_PASSWORD: "hse_minio_password"
+      MINIO_ROOT_USER: hse_minio_user
+      MINIO_ROOT_PASSWORD: hse_minio_password
     volumes:
       - ~/minio/data:/data
     healthcheck:
