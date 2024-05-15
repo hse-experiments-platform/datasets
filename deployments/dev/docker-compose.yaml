@@ -15,7 +15,7 @@ services:
       - DOTENV_FILE=configs/dev/.env
       - DB_CONNECT_STRING=postgresql://hseuser:P@ssw0rd@db:5432/hsedb
       - DATASETS_DB_CONNECT_STRING=postgresql://hseuser:P@ssw0rd@datasetsdb:5432/datasetsdb
-      - MINIO_ADDR=minio:9000
+      - MINIO_ADDR=tcarzverey.ru:9000
       - LAUNCHER_ADDR=launcher:8087
       - HOST=tcarzverey.ru:9000
     ports:
