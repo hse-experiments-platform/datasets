@@ -936,6 +936,56 @@ func (m *GetDatasetRowsResponse) MarshalToSizedBufferVT(dAtA []byte) (int, error
 	return len(dAtA) - i, nil
 }
 
+func (m *EmptiesStrategy) MarshalVT() (dAtA []byte, err error) {
+	if m == nil {
+		return nil, nil
+	}
+	size := m.SizeVT()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBufferVT(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EmptiesStrategy) MarshalToVT(dAtA []byte) (int, error) {
+	size := m.SizeVT()
+	return m.MarshalToSizedBufferVT(dAtA[:size])
+}
+
+func (m *EmptiesStrategy) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
+	if m == nil {
+		return 0, nil
+	}
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.unknownFields != nil {
+		i -= len(m.unknownFields)
+		copy(dAtA[i:], m.unknownFields)
+	}
+	if len(m.ConstantValue) > 0 {
+		i -= len(m.ConstantValue)
+		copy(dAtA[i:], m.ConstantValue)
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(len(m.ConstantValue)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if m.AggregateFunction != 0 {
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.AggregateFunction))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.Technique != 0 {
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Technique))
+		i--
+		dAtA[i] = 0x10
+	}
+	return len(dAtA) - i, nil
+}
+
 func (m *SetTypeSettings) MarshalVT() (dAtA []byte, err error) {
 	if m == nil {
 		return nil, nil
@@ -966,25 +1016,18 @@ func (m *SetTypeSettings) MarshalToSizedBufferVT(dAtA []byte) (int, error) {
 		i -= len(m.unknownFields)
 		copy(dAtA[i:], m.unknownFields)
 	}
-	if len(m.FillingValue) > 0 {
-		i -= len(m.FillingValue)
-		copy(dAtA[i:], m.FillingValue)
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(len(m.FillingValue)))
+	if m.EmptiesStrategy != nil {
+		size, err := m.EmptiesStrategy.MarshalToSizedBufferVT(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(size))
 		i--
-		dAtA[i] = 0x22
+		dAtA[i] = 0x12
 	}
-	if m.AggregateFunction != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.AggregateFunction))
-		i--
-		dAtA[i] = 0x18
-	}
-	if m.FillingTechnique != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.FillingTechnique))
-		i--
-		dAtA[i] = 0x10
-	}
-	if m.Type != 0 {
-		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.Type))
+	if m.ColumnType != 0 {
+		i = protohelpers.EncodeVarint(dAtA, i, uint64(m.ColumnType))
 		i--
 		dAtA[i] = 0x8
 	}
@@ -1504,23 +1547,37 @@ func (m *GetDatasetRowsResponse) SizeVT() (n int) {
 	return n
 }
 
+func (m *EmptiesStrategy) SizeVT() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Technique != 0 {
+		n += 1 + protohelpers.SizeOfVarint(uint64(m.Technique))
+	}
+	if m.AggregateFunction != 0 {
+		n += 1 + protohelpers.SizeOfVarint(uint64(m.AggregateFunction))
+	}
+	l = len(m.ConstantValue)
+	if l > 0 {
+		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
+	}
+	n += len(m.unknownFields)
+	return n
+}
+
 func (m *SetTypeSettings) SizeVT() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.Type != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.Type))
+	if m.ColumnType != 0 {
+		n += 1 + protohelpers.SizeOfVarint(uint64(m.ColumnType))
 	}
-	if m.FillingTechnique != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.FillingTechnique))
-	}
-	if m.AggregateFunction != 0 {
-		n += 1 + protohelpers.SizeOfVarint(uint64(m.AggregateFunction))
-	}
-	l = len(m.FillingValue)
-	if l > 0 {
+	if m.EmptiesStrategy != nil {
+		l = m.EmptiesStrategy.SizeVT()
 		n += 1 + l + protohelpers.SizeOfVarint(uint64(l))
 	}
 	n += len(m.unknownFields)
@@ -3651,6 +3708,127 @@ func (m *GetDatasetRowsResponse) UnmarshalVT(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *EmptiesStrategy) UnmarshalVT(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return protohelpers.ErrIntOverflow
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EmptiesStrategy: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EmptiesStrategy: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Technique", wireType)
+			}
+			m.Technique = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Technique |= FillingTechnique(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AggregateFunction", wireType)
+			}
+			m.AggregateFunction = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.AggregateFunction |= AggregateFunction(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ConstantValue", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protohelpers.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ConstantValue = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := protohelpers.Skip(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return protohelpers.ErrInvalidLength
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.unknownFields = append(m.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *SetTypeSettings) UnmarshalVT(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -3682,9 +3860,9 @@ func (m *SetTypeSettings) UnmarshalVT(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ColumnType", wireType)
 			}
-			m.Type = 0
+			m.ColumnType = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return protohelpers.ErrIntOverflow
@@ -3694,54 +3872,16 @@ func (m *SetTypeSettings) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Type |= ColumnType(b&0x7F) << shift
+				m.ColumnType |= ColumnType(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field FillingTechnique", wireType)
-			}
-			m.FillingTechnique = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.FillingTechnique |= FillingTechnique(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AggregateFunction", wireType)
-			}
-			m.AggregateFunction = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protohelpers.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.AggregateFunction |= AggregateFunction(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field FillingValue", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field EmptiesStrategy", wireType)
 			}
-			var stringLen uint64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return protohelpers.ErrIntOverflow
@@ -3751,23 +3891,27 @@ func (m *SetTypeSettings) UnmarshalVT(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if msglen < 0 {
 				return protohelpers.ErrInvalidLength
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + msglen
 			if postIndex < 0 {
 				return protohelpers.ErrInvalidLength
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.FillingValue = string(dAtA[iNdEx:postIndex])
+			if m.EmptiesStrategy == nil {
+				m.EmptiesStrategy = &EmptiesStrategy{}
+			}
+			if err := m.EmptiesStrategy.UnmarshalVT(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

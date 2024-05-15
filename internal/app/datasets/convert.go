@@ -49,10 +49,10 @@ func convertColumnTypePB(t pb.ColumnType) models.ColumnType {
 
 func convertSetTypesSettings(m *pb.SetTypeSettings) *launcherpb.SetTypeSettings {
 	return &launcherpb.SetTypeSettings{
-		Type:              convertColumnType(m.Type),
-		FillingTechnique:  convertFillingTechnique(m.FillingTechnique),
-		AggregateFunction: convertAggregateFunction(m.AggregateFunction),
-		FillingValue:      m.FillingValue,
+		Type:              convertColumnType(m.ColumnType),
+		FillingTechnique:  convertFillingTechnique(m.GetEmptiesStrategy().GetTechnique()),
+		AggregateFunction: convertAggregateFunction(m.GetEmptiesStrategy().GetAggregateFunction()),
+		FillingValue:      m.GetEmptiesStrategy().GetConstantValue(),
 	}
 }
 

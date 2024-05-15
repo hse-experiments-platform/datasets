@@ -61,13 +61,13 @@ func (d *datasetsService) SetDatasetColumnTypes(ctx context.Context, req *pb.Set
 		t, ok := columnsMap[row.ColumnName]
 		if !ok {
 			return nil, status.Errorf(codes.InvalidArgument, "column type for column %s not specified", row.ColumnName)
-		} else if t.Type == pb.ColumnType_ColumnTypeUndefined {
+		} else if t.ColumnType == pb.ColumnType_ColumnTypeUndefined {
 			return nil, status.Errorf(codes.InvalidArgument, "column type for column %s not selected", row.ColumnName)
 		}
 
 		dbReq.Indexes[i] = int32(i)
 		dbReq.ColumnNames[i] = row.ColumnName
-		dbReq.ColumnTypes[i] = models.TypeToString[convertColumnTypePB(t.Type)]
+		dbReq.ColumnTypes[i] = models.TypeToString[convertColumnTypePB(t.ColumnType)]
 		settings[row.ColumnName] = convertSetTypesSettings(t)
 	}
 

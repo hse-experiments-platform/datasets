@@ -535,6 +535,20 @@
         }
       }
     },
+    "datasetsEmptiesStrategy": {
+      "type": "object",
+      "properties": {
+        "technique": {
+          "$ref": "#/definitions/datasetsFillingTechnique"
+        },
+        "aggregateFunction": {
+          "$ref": "#/definitions/datasetsAggregateFunction"
+        },
+        "constantValue": {
+          "type": "string"
+        }
+      }
+    },
     "datasetsFillingTechnique": {
       "type": "string",
       "enum": [
@@ -622,17 +636,11 @@
     "datasetsSetTypeSettings": {
       "type": "object",
       "properties": {
-        "type": {
+        "columnType": {
           "$ref": "#/definitions/datasetsColumnType"
         },
-        "fillingTechnique": {
-          "$ref": "#/definitions/datasetsFillingTechnique"
-        },
-        "aggregateFunction": {
-          "$ref": "#/definitions/datasetsAggregateFunction"
-        },
-        "fillingValue": {
-          "type": "string"
+        "emptiesStrategy": {
+          "$ref": "#/definitions/datasetsEmptiesStrategy"
         }
       }
     },

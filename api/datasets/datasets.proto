@@ -232,11 +232,15 @@ enum AggregateFunction {
   AggregateFunctionMostFrequent = 5;
 }
 
-message SetTypeSettings {
-  ColumnType type = 1;
-  FillingTechnique fillingTechnique = 2;
+message EmptiesStrategy{
+  FillingTechnique technique = 2;
   AggregateFunction aggregateFunction = 3;
-  string fillingValue = 4;
+  string constantValue = 4;
+}
+
+message SetTypeSettings {
+  ColumnType columnType = 1;
+  EmptiesStrategy emptiesStrategy = 2;
 }
 
 message SetDatasetColumnTypesRequest {
