@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/hse-experiments-platform/datasets/internal/pkg/domain"
+	"github.com/hse-experiments-platform/datasets/internal/pkg/storage/common"
 	pb "github.com/hse-experiments-platform/datasets/pkg/datasets"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -21,6 +22,18 @@ func (d *datasetsService) GetDatasetDownloadLink(ctx context.Context, request *p
 	}
 
 	userID, _ := getUserID(ctx)
+
+	allowedStatuses := map[common.DatasetStatus]bool{
+		common.DatasetStatusWaitsConvertation: true,
+		common.DatasetStatusReady:             true,
+	}
+
+	st, err := d.commonDB.GetDatasetStatus(ctx, request.GetDatasetID())
+	if err != nil {
+		return nil, fmt.Errorf("d.commonDB.GetDatasetStatus: %w", err)
+	} else if !allowedStatuses[st] {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid dataset status to upload: expected waits_convertation/ready, got: %v", st)
+	}
 
 	url, err := d.minio.GetObjectDownloadLink(ctx, domain.GetBucketName(userID), domain.GetObjectName(request.GetDatasetID()))
 	if err != nil {

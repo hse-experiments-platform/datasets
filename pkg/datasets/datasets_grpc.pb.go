@@ -26,6 +26,7 @@ const (
 	DatasetsService_GetDatasetRows_FullMethodName         = "/github.hse_experiments_platform.datasets.api.datasets.DatasetsService/GetDatasetRows"
 	DatasetsService_SetDatasetColumnTypes_FullMethodName  = "/github.hse_experiments_platform.datasets.api.datasets.DatasetsService/SetDatasetColumnTypes"
 	DatasetsService_GetDatasetDownloadLink_FullMethodName = "/github.hse_experiments_platform.datasets.api.datasets.DatasetsService/GetDatasetDownloadLink"
+	DatasetsService_TransformDataset_FullMethodName       = "/github.hse_experiments_platform.datasets.api.datasets.DatasetsService/TransformDataset"
 )
 
 // DatasetsServiceClient is the client API for DatasetsService service.
@@ -39,6 +40,7 @@ type DatasetsServiceClient interface {
 	GetDatasetRows(ctx context.Context, in *GetDatasetRowsRequest, opts ...grpc.CallOption) (*GetDatasetRowsResponse, error)
 	SetDatasetColumnTypes(ctx context.Context, in *SetDatasetColumnTypesRequest, opts ...grpc.CallOption) (*SetDatasetColumnTypesResponse, error)
 	GetDatasetDownloadLink(ctx context.Context, in *GetDatasetDownloadLinkRequest, opts ...grpc.CallOption) (*GetDatasetDownloadLinkResponse, error)
+	TransformDataset(ctx context.Context, in *TransformDatasetRequest, opts ...grpc.CallOption) (*TransformDatasetResponse, error)
 }
 
 type datasetsServiceClient struct {
@@ -112,6 +114,15 @@ func (c *datasetsServiceClient) GetDatasetDownloadLink(ctx context.Context, in *
 	return out, nil
 }
 
+func (c *datasetsServiceClient) TransformDataset(ctx context.Context, in *TransformDatasetRequest, opts ...grpc.CallOption) (*TransformDatasetResponse, error) {
+	out := new(TransformDatasetResponse)
+	err := c.cc.Invoke(ctx, DatasetsService_TransformDataset_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DatasetsServiceServer is the server API for DatasetsService service.
 // All implementations should embed UnimplementedDatasetsServiceServer
 // for forward compatibility
@@ -123,6 +134,7 @@ type DatasetsServiceServer interface {
 	GetDatasetRows(context.Context, *GetDatasetRowsRequest) (*GetDatasetRowsResponse, error)
 	SetDatasetColumnTypes(context.Context, *SetDatasetColumnTypesRequest) (*SetDatasetColumnTypesResponse, error)
 	GetDatasetDownloadLink(context.Context, *GetDatasetDownloadLinkRequest) (*GetDatasetDownloadLinkResponse, error)
+	TransformDataset(context.Context, *TransformDatasetRequest) (*TransformDatasetResponse, error)
 }
 
 // UnimplementedDatasetsServiceServer should be embedded to have forward compatible implementations.
@@ -149,6 +161,9 @@ func (UnimplementedDatasetsServiceServer) SetDatasetColumnTypes(context.Context,
 }
 func (UnimplementedDatasetsServiceServer) GetDatasetDownloadLink(context.Context, *GetDatasetDownloadLinkRequest) (*GetDatasetDownloadLinkResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDatasetDownloadLink not implemented")
+}
+func (UnimplementedDatasetsServiceServer) TransformDataset(context.Context, *TransformDatasetRequest) (*TransformDatasetResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TransformDataset not implemented")
 }
 
 // UnsafeDatasetsServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -288,6 +303,24 @@ func _DatasetsService_GetDatasetDownloadLink_Handler(srv interface{}, ctx contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DatasetsService_TransformDataset_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TransformDatasetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DatasetsServiceServer).TransformDataset(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: DatasetsService_TransformDataset_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DatasetsServiceServer).TransformDataset(ctx, req.(*TransformDatasetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // DatasetsService_ServiceDesc is the grpc.ServiceDesc for DatasetsService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -322,6 +355,10 @@ var DatasetsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetDatasetDownloadLink",
 			Handler:    _DatasetsService_GetDatasetDownloadLink_Handler,
+		},
+		{
+			MethodName: "TransformDataset",
+			Handler:    _DatasetsService_TransformDataset_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -318,6 +318,50 @@
         ]
       }
     },
+    "/api/v1/datasets/{datasetID}/transform": {
+      "post": {
+        "operationId": "DatasetsService_TransformDataset",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/datasetsTransformDatasetResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "datasetID",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/DatasetsServiceTransformDatasetBody"
+            }
+          }
+        ],
+        "tags": [
+          "DatasetsService"
+        ],
+        "security": [
+          {
+            "AccessToken": []
+          }
+        ]
+      }
+    },
     "/api/v1/datasets/{datasetID}/upload/link": {
       "post": {
         "operationId": "DatasetsService_UploadDatasetByLink",
@@ -382,6 +426,17 @@
           "type": "object",
           "additionalProperties": {
             "$ref": "#/definitions/datasetsSetTypeSettings"
+          }
+        }
+      }
+    },
+    "DatasetsServiceTransformDatasetBody": {
+      "type": "object",
+      "properties": {
+        "columnPreprocessSettings": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/datasetsTransformSettings"
           }
         }
       }
@@ -549,6 +604,15 @@
         }
       }
     },
+    "datasetsEncodingTechnique": {
+      "type": "string",
+      "enum": [
+        "EncodingTechniqueUndefined",
+        "EncodingTechniqueOneHotEncoding",
+        "EncodingTechniqueLabelEncoding"
+      ],
+      "default": "EncodingTechniqueUndefined"
+    },
     "datasetsFillingTechnique": {
       "type": "string",
       "enum": [
@@ -613,6 +677,46 @@
         }
       }
     },
+    "datasetsOutlinersDetectingStrategy": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "$ref": "#/definitions/datasetsOutlinesDetectingMode"
+        },
+        "min": {
+          "type": "number",
+          "format": "double"
+        },
+        "max": {
+          "type": "number",
+          "format": "double"
+        }
+      }
+    },
+    "datasetsOutlinersReplacementStrategy": {
+      "type": "object",
+      "properties": {
+        "replacementMode": {
+          "$ref": "#/definitions/datasetsFillingTechnique"
+        },
+        "aggregateValue": {
+          "$ref": "#/definitions/datasetsAggregateFunction"
+        },
+        "constantValue": {
+          "type": "string"
+        }
+      }
+    },
+    "datasetsOutlinesDetectingMode": {
+      "type": "string",
+      "enum": [
+        "OutlinesDetectingModeUnknown",
+        "OutlinesDetectingModeNone",
+        "OutlinesDetectingModeUnknownMinMaxThresholds",
+        "OutlinesDetectingModeUnknownIQRMethod"
+      ],
+      "default": "OutlinesDetectingModeUnknown"
+    },
     "datasetsPageInfo": {
       "type": "object",
       "properties": {
@@ -629,6 +733,15 @@
           "format": "uint64"
         }
       }
+    },
+    "datasetsScalingTechnique": {
+      "type": "string",
+      "enum": [
+        "ScalingTechniqueUndefined",
+        "ScalingTechniqueNormalization",
+        "ScalingTechniqueStandardization"
+      ],
+      "default": "ScalingTechniqueUndefined"
     },
     "datasetsSetDatasetColumnTypesResponse": {
       "type": "object"
@@ -659,6 +772,49 @@
         },
         "status": {
           "$ref": "#/definitions/datasetsDatasetStatus"
+        }
+      }
+    },
+    "datasetsTransformDatasetResponse": {
+      "type": "object",
+      "properties": {
+        "newDatasetID": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "datasetsTransformEmptiesStrategy": {
+      "type": "object",
+      "properties": {
+        "fillingTechnique": {
+          "$ref": "#/definitions/datasetsFillingTechnique"
+        },
+        "aggregateFunction": {
+          "$ref": "#/definitions/datasetsAggregateFunction"
+        },
+        "fillingValue": {
+          "type": "string"
+        }
+      }
+    },
+    "datasetsTransformSettings": {
+      "type": "object",
+      "properties": {
+        "scalingTechnique": {
+          "$ref": "#/definitions/datasetsScalingTechnique"
+        },
+        "encodingTechnique": {
+          "$ref": "#/definitions/datasetsEncodingTechnique"
+        },
+        "emptiesStrategy": {
+          "$ref": "#/definitions/datasetsTransformEmptiesStrategy"
+        },
+        "outlinersDetectingStrategy": {
+          "$ref": "#/definitions/datasetsOutlinersDetectingStrategy"
+        },
+        "outlinersReplacementStrategy": {
+          "$ref": "#/definitions/datasetsOutlinersReplacementStrategy"
         }
       }
     },

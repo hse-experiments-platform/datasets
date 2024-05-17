@@ -96,6 +96,17 @@ service DatasetsService {
       security: {security_requirement: {key: "AccessToken";value: {}}}
     };
   }
+
+  rpc TransformDataset(TransformDatasetRequest) returns (TransformDatasetResponse) {
+    option (google.api.http) = {
+      post: "/api/v1/datasets/{datasetID}/transform"
+      body: "*"
+    };
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      security: {security_requirement: {key: "AccessToken";value: {}}}
+    };
+  }
+
 }
 
 message CreateDatasetRequest {
@@ -259,3 +270,61 @@ message GetDatasetDownloadLinkResponse {
   string url = 1;
   int64 userID = 2;
 }
+
+
+
+enum ScalingTechnique {
+  ScalingTechniqueUndefined = 0;
+  ScalingTechniqueNormalization = 1;
+  ScalingTechniqueStandardization = 2;
+}
+
+enum EncodingTechnique {
+  EncodingTechniqueUndefined = 0;
+  EncodingTechniqueOneHotEncoding = 1;
+  EncodingTechniqueLabelEncoding = 2;
+}
+
+message TransformEmptiesStrategy {
+  FillingTechnique fillingTechnique = 1;
+  AggregateFunction aggregateFunction = 2;
+  string fillingValue = 3;
+}
+
+enum OutlinesDetectingMode {
+  OutlinesDetectingModeUnknown = 0;
+  OutlinesDetectingModeNone = 1;
+  OutlinesDetectingModeUnknownMinMaxThresholds = 2;
+  OutlinesDetectingModeUnknownIQRMethod = 3;
+}
+
+message OutlinersDetectingStrategy {
+  OutlinesDetectingMode mode = 1;
+  double min = 2;
+  double max = 3;
+}
+
+message OutlinersReplacementStrategy {
+  FillingTechnique replacementMode = 1;
+  AggregateFunction aggregateValue = 2;
+  string constantValue = 3;
+}
+
+message TransformSettings {
+  ScalingTechnique scalingTechnique = 1;
+  EncodingTechnique encodingTechnique = 2;
+  TransformEmptiesStrategy emptiesStrategy = 3;
+  OutlinersDetectingStrategy outlinersDetectingStrategy = 4;
+  OutlinersReplacementStrategy outlinersReplacementStrategy = 5;
+}
+
+message TransformDatasetRequest {
+  int64 datasetID = 2;
+  map<string, TransformSettings> columnPreprocessSettings = 3;
+}
+
+message TransformDatasetResponse {
+  int64 new_datasetID = 2;
+}
+
+

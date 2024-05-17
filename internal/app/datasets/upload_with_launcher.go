@@ -2,6 +2,7 @@ package datasets
 
 import (
 	"context"
+
 	xerrors "errors"
 	"fmt"
 
@@ -94,11 +95,12 @@ func (d *datasetsService) processLaunch(ctx context.Context, launchID, datasetID
 		// если дошли до сюда, значит у нас в какой то момент возникла ошибка, откатываем
 		log.Error().Err(err).Msg("error in upload")
 		var revErr *errors.RevertableError
-		if xerrors.As(err, &revErr) {
-			if err = d.setFailedUpload(ctx, datasetID, revErr.GetReason()); err != nil {
-				log.Error().Err(err).Msg("cannot set failed upload status")
-				return
-			}
+		if !xerrors.As(err, &revErr) {
+			xerrors.As(errors.NewRevertable(err, "Ошибка при загрузке датасета"), &revErr)
+		}
+		if err = d.setFailedUpload(ctx, datasetID, revErr.GetReason()); err != nil {
+			log.Error().Err(err).Msg("cannot set failed upload status")
+			return
 		}
 	}()
 
