@@ -5,7 +5,7 @@ go 1.22.0
 require (
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.1
-	github.com/hse-experiments-platform/launcher v0.0.0-20240517175649-ab5e859b8a1e
+	github.com/hse-experiments-platform/launcher v0.0.0-20240517185546-21207ce8f8a1
 	github.com/hse-experiments-platform/library v0.0.0-20240511143330-9d7092fbd519
 	github.com/jackc/pgx/v5 v5.5.5
 	github.com/joho/godotenv v1.5.1

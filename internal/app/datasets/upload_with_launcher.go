@@ -120,8 +120,8 @@ func (d *datasetsService) processLaunch(ctx context.Context, launchID, datasetID
 		return errors.NewRevertable(fmt.Errorf("d.launcher.GetDatasetUploadLaunch: %w", err), "cannot get launch info")
 	}
 
-	colsMap := launch.GetColumnTypes()
-	for k := range colsMap {
+	colsMap := launch.GetColumnNames()
+	for _, k := range colsMap {
 		cols = append(cols, k)
 	}
 

@@ -26,8 +26,8 @@ github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1 h1:HcUWd006luQPljE73d5sk+
 github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1/go.mod h1:w9Y7gY31krpLmrVU5ZPG9H7l9fZuRu5/3R3S3FMtVQ4=
 github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.1 h1:/c3QmbOGMGTOumP2iT/rCwB7b0QDGLKzqOmktBjT+Is=
 github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.1/go.mod h1:5SN9VR2LTsRFsrEC6FHgRbTWrTHu6tqPeKxEQv15giM=
-github.com/hse-experiments-platform/launcher v0.0.0-20240517175649-ab5e859b8a1e h1:KH6SUTr8Y1RxvYI1IAw7m41N+0yucVq+29N7uhpVNRE=
-github.com/hse-experiments-platform/launcher v0.0.0-20240517175649-ab5e859b8a1e/go.mod h1:4bWWQ21zsUIGyOt3B10rej1f9JtnKcw/Kt9uPtZedgg=
+github.com/hse-experiments-platform/launcher v0.0.0-20240517185546-21207ce8f8a1 h1:sbxXrvaDg5lUh1h2+qNqIgS8MH2j9oS/ICaJ4QYTXQw=
+github.com/hse-experiments-platform/launcher v0.0.0-20240517185546-21207ce8f8a1/go.mod h1:4bWWQ21zsUIGyOt3B10rej1f9JtnKcw/Kt9uPtZedgg=
 github.com/hse-experiments-platform/library v0.0.0-20240511143330-9d7092fbd519 h1:z3FUyZSL8wunCExY5XU/27WtYxgZ1NaZqTNRwajKXAc=
 github.com/hse-experiments-platform/library v0.0.0-20240511143330-9d7092fbd519/go.mod h1:ggjcUW0e2Qs9vqTCgkW0MI42WJWlBnhSAIlBLaAZMzQ=
 github.com/jackc/pgpassfile v1.0.0 h1:/6Hmqy13Ss2zCq62VdNG8tM1wchn8zjSGOBJ6icpsIM=
